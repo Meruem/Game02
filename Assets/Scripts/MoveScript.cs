@@ -2,21 +2,20 @@
 
 namespace Assets.Scripts
 {
-    [RequireComponent(typeof(Animator), typeof(Rigidbody2D))]
+    [RequireComponent(typeof(Rigidbody2D))]
     public class MoveScript : MonoBehaviour
     {
         public float MaxSpeed = 5.0f;
         public int FacingAngleAdjustment;
-
+        
         private Animator _animator;
         private Rigidbody2D _cachedRigidBody2D;
-        private Transform _cachedTransform;
+        public Transform Body;
 
         private void Start()
         {
-            _animator = GetComponent<Animator>();
+            _animator = Body.GetComponent<Animator>();
             _cachedRigidBody2D = GetComponent<Rigidbody2D>();
-            _cachedTransform = gameObject.transform;
         }
         
         public void Move(Vector2 movement)
@@ -41,7 +40,7 @@ namespace Assets.Scripts
             if (speed > 0.0f)
             {
                 //rotate by angle around the z axis.
-                _cachedTransform.rotation = Quaternion.AngleAxis(angle, new Vector3(0, 0, 1));
+                Body.rotation = Quaternion.AngleAxis(angle, new Vector3(0, 0, 1));
             }
         }         
     }
