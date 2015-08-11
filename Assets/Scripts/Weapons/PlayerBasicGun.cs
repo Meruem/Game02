@@ -47,7 +47,7 @@ namespace Assets.Scripts.Weapons
             var bulletScript = bullet.GetComponent<Bullet>();
             bulletScript.Damage = _bulletPrototype.Damage;
             bulletScript.Speed = _bulletPrototype.Speed;
-            bullet.rigidbody2D.velocity = vector*_bulletPrototype.Speed;
+            bullet.GetComponent<Rigidbody2D>().velocity = vector*_bulletPrototype.Speed;
         }
     }
 }

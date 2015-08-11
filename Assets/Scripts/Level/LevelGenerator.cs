@@ -53,7 +53,7 @@ namespace Assets.Scripts
             ClearTiles();
             ClearMonsters();
 
-            var bounds = WallTile.renderer.bounds.size;
+            var bounds = WallTile.GetComponent<Renderer>().bounds.size;
             GenerateTiles(MapWidth, MapHeight, bounds.x, bounds.y);
             var startPosition = GetRandomFreePosition();
             Player.position = startPosition;
@@ -118,7 +118,7 @@ namespace Assets.Scripts
         {
             var position = Vector2.zero;
             int count = 0;
-            var bounds = WallTile.renderer.bounds.size;
+            var bounds = WallTile.GetComponent<Renderer>().bounds.size;
 
             while (position == Vector2.zero && count <= _maxTries)
             {
