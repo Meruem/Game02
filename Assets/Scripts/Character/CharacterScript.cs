@@ -5,8 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(MoveScript))]
 public class CharacterScript : MonoBehaviour
 {
-    public Transform Bullet;
- 
     private bool _mousePressed;
     private MoveScript _moveScript;
     private Transform _weaponArc;
@@ -35,7 +33,7 @@ public class CharacterScript : MonoBehaviour
         float xMovement = Input.GetAxisRaw("Horizontal");
         float yMovement = Input.GetAxisRaw("Vertical");
 
-        Vector2 movement = new Vector2(xMovement, yMovement);
+        var movement = new Vector2(xMovement, yMovement);
 
         if (_mousePressed)
         {
