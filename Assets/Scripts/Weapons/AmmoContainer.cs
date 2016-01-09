@@ -25,7 +25,6 @@ namespace Assets.Scripts.Weapons
             _amounts = new Dictionary<AmmoType, int>();
         }
 
-
         public void AddAmmo(AmmoType type, int amount)
         {
             var max = _maxAmounts[type];

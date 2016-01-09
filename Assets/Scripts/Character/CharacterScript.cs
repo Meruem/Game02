@@ -17,7 +17,7 @@ public class CharacterScript : MonoBehaviour
         _weaponArc = transform.FindChild("Weapon");
         _ammoContainer = new AmmoContainer();
         _ammoContainer.AddAmmo(AmmoType.Bullets, 100);
-        _activeWeapon = new PlayerBasicGun(_ammoContainer);
+        _activeWeapon = new PlayerBasicGun(_ammoContainer, 0.1f);
     }
 
     public void Update()

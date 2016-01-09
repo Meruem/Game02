@@ -81,7 +81,6 @@ namespace Assets.Scripts
 
         private void GenerateTiles(int mapWidth, int mapHeight, float tileWidth, float tileHeight)
         {
-
             _map = new MapGenerator(mapWidth, mapHeight);
             for (int i = 0; i < mapWidth; i++)
             {

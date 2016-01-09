@@ -5,6 +5,8 @@ namespace Assets.Scripts.Weapons
     class PlayerBasicGun : WeaponBase
     {
         private readonly AmmoContainer _ammoContainer;
+        private readonly float _weaponCooldown;
+        private readonly WeaponStateMachine _weaponStateMachine;
 
         private BulletPrototype _bulletPrototype = new BulletPrototype
         {
@@ -13,9 +15,11 @@ namespace Assets.Scripts.Weapons
             PrefabName = "Bullet"
         };
 
-        public PlayerBasicGun(AmmoContainer ammoContainer)
+        public PlayerBasicGun(AmmoContainer ammoContainer, float weaponCooldown)
         {
             _ammoContainer = ammoContainer;
+            _weaponCooldown = weaponCooldown;
+            _weaponStateMachine = new WeaponStateMachine(weaponCooldown, 0);
         }
 
         public override string Name
@@ -25,6 +29,8 @@ namespace Assets.Scripts.Weapons
 
         public override void Fire(Vector2 position, float degAngle)
         {
+            if (!_weaponStateMachine.TryFire()) return;
+
             Debug.Log("Bullets: " + _ammoContainer.AmmoAmmount(AmmoType.Bullets));
             if (_ammoContainer.HasEnaughAmmo(AmmoType.Bullets, 1))
             {
@@ -41,7 +47,7 @@ namespace Assets.Scripts.Weapons
 
             var bullet =
                 (Transform)
-                    Transform.Instantiate(Resources.Load<Transform>(_bulletPrototype.PrefabName), position,
+                    Object.Instantiate(Resources.Load<Transform>(_bulletPrototype.PrefabName), position,
                         Quaternion.Euler(0, 0, degAngle + 90));
             bullet.gameObject.layer = (int) Layers.Player;
             var bulletScript = bullet.GetComponent<Bullet>();

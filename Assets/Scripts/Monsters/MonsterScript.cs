@@ -25,6 +25,7 @@ public class MonsterScript : MonoBehaviour
 
     private void OnTakeDamage(int damage)
     {
+        Debug.Log(string.Format("Damage taken: {0}", damage));
         _lives -= damage;
         if (_lives <= 0)
         {
