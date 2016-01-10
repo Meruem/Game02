@@ -14,7 +14,7 @@ public class MonsterScript : MonoBehaviour
     private TakeDamageTrigger _takeDamageTrigger;
 
 	// Use this for initialization
-	void Start ()
+	public void Start ()
 	{
         _lives = MaxLives;
 	    _moveScript = GetComponent<MoveScript>();
@@ -35,7 +35,7 @@ public class MonsterScript : MonoBehaviour
     }
 
     // Update is called once per frame
-	void Update () 
+	public void Update () 
     {
         //FireBullet();
             //_nextDirectionChange = gameTime.TotalGameTime + TimeSpan.FromSeconds(_random.Next(1, 5));

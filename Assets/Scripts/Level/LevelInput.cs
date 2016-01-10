@@ -6,14 +6,14 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    [RequireComponent(typeof(LevelGenerator))]
+    [RequireComponent(typeof(LevelGeneratorScript))]
     class LevelInput : MonoBehaviour
     {
-        private LevelGenerator _level;
+        private LevelGeneratorScript _level;
 
         void Awake()
         {
-            _level = GetComponent<LevelGenerator>();
+            _level = GetComponent<LevelGeneratorScript>();
         }
 
         void Update()

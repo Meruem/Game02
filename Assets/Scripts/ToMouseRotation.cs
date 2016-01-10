@@ -2,7 +2,7 @@
 
 namespace Assets.Scripts
 {
-    class WeaponRotation : MonoBehaviour
+    class ToMouseRotation : MonoBehaviour
     {
         public float RotationAdjustment = -90;
 

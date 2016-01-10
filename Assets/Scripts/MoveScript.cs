@@ -30,18 +30,6 @@ namespace Assets.Scripts
 
             //set the speed variable in the animation component to ensure proper state.
             _animator.SetFloat("Speed", speed);
-
-            //convert the vector into a radian angle, 
-            //convert to degrees and then adjust for the 
-            //spider's starting orientation
-            float angle = Mathf.Atan2(movement.y, movement.x) * Mathf.Rad2Deg + FacingAngleAdjustment;
-
-            //don't rotate if we don't need to.
-            if (speed > 0.0f)
-            {
-                //rotate by angle around the z axis.
-                Body.rotation = Quaternion.AngleAxis(angle, new Vector3(0, 0, 1));
-            }
         }         
     }
 }

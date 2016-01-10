@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public class LevelGenerator : MonoBehaviour
+    public class LevelGeneratorScript : MonoBehaviour
     {
         public int MapWidth;
         public int MapHeight;
