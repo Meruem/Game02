@@ -11,13 +11,26 @@ public class CharacterScript : MonoBehaviour
     private AmmoContainer _ammoContainer;
     private WeaponBase _activeWeapon;
 
+    private int _lives = 10;
+
     void Start()
     {
         _moveScript = GetComponent<MoveScript>();
         _weaponArc = transform.FindChild("Weapon");
         _ammoContainer = new AmmoContainer();
         _ammoContainer.AddAmmo(AmmoType.Bullets, 100);
-        _activeWeapon = new PlayerBasicGun(_ammoContainer, 0.1f);
+        _activeWeapon = new PlayerBasicGun(_ammoContainer, 0.2f);
+        var damageTrigger = GetComponent<TakeDamageTrigger>();
+        damageTrigger.OnTakeDamage += TakeDamage;
+
+        UIScript.Instance.UpdateLives(_lives);
+        UIScript.Instance.UpdateAmmo(_ammoContainer.AmmoAmmount(AmmoType.Bullets));
+    }
+
+    private void TakeDamage(int damage)
+    {
+        _lives -= damage;
+        UIScript.Instance.UpdateLives(_lives);
     }
 
     public void Update()
@@ -47,5 +60,6 @@ public class CharacterScript : MonoBehaviour
     private void Fire()
     {
         _activeWeapon.Fire(transform.position, _weaponArc.rotation.eulerAngles.z);
+        UIScript.Instance.UpdateAmmo(_ammoContainer.AmmoAmmount(AmmoType.Bullets));
     }
 }

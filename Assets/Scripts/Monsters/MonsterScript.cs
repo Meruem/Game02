@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using Assets.Scripts;
+using Assets.Scripts.Weapons;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -13,15 +15,23 @@ public class MonsterScript : MonoBehaviour
     private int _lives;
     private TakeDamageTrigger _takeDamageTrigger;
 
-	// Use this for initialization
-	public void Start ()
+    private readonly BulletPrototype _bulletPrototype = new BulletPrototype
+    {
+        Damage = 1,
+        Speed = 6,
+        PrefabName = "MonsterBullet"
+    };
+
+    // Use this for initialization
+    public void Start ()
 	{
         _lives = MaxLives;
 	    _moveScript = GetComponent<MoveScript>();
 	    _takeDamageTrigger = GetComponent<TakeDamageTrigger>();
         _takeDamageTrigger.OnTakeDamage += OnTakeDamage;
-        ChangeDirection();
-    }
+	    StartCoroutine(ChangeDirection());
+        StartCoroutine(StartShooting());
+	}
 
     private void OnTakeDamage(int damage)
     {
@@ -34,20 +44,27 @@ public class MonsterScript : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
-	public void Update () 
+    private IEnumerator StartShooting()
     {
-        //FireBullet();
-            //_nextDirectionChange = gameTime.TotalGameTime + TimeSpan.FromSeconds(_random.Next(1, 5));
+        yield return new WaitForSeconds(3);
 
-	}
+        while (true)
+        {
+            var bullet = BulletObjectFactory.CreateBullet(transform.position, Random.Range(0, 16) * 360f / 16, _bulletPrototype);
+            bullet.gameObject.layer = (int)Layers.MonsterBulletes;
+            yield return new WaitForSeconds(Random.Range(1, 3));
+        }
+    }
 
-    private void ChangeDirection()
+    IEnumerator ChangeDirection()
     {
-        float angle = Random.Range(0, 16) * (float)Math.PI * 2f / 16;
-        _direction = angle;
-        var vector = Math2.AngleRadToVector(_direction)*_moveScript.MaxSpeed;
-        _moveScript.Move(vector);
-        Invoke("ChangeDirection", Random.Range(1,4));
+        while (true)
+        {
+            float angle = Random.Range(0, 16)*(float) Math.PI*2f/16;
+            _direction = angle;
+            var vector = Math2.AngleRadToVector(_direction)*_moveScript.MaxSpeed;
+            _moveScript.Move(vector);
+            yield return new WaitForSeconds(Random.Range(1, 4));
+        }
     }
 }

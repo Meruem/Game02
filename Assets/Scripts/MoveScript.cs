@@ -20,6 +20,8 @@ namespace Assets.Scripts
         
         public void Move(Vector2 movement)
         {
+            if (_cachedRigidBody2D == null) return;
+
             //move the rigid body, which is part of the physics system
             //This ensures smooth movement.
             _cachedRigidBody2D.velocity = new Vector2(movement.x * MaxSpeed, movement.y * MaxSpeed);
