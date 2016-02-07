@@ -11,15 +11,15 @@ namespace Assets.Scripts.Weapons
         private readonly Dictionary<AmmoType, int> _amounts;
 
         public AmmoContainer()
-            : this(new List<Tuple<AmmoType, int>>
+            : this(new List<Misc.Tuple<AmmoType, int>>
             {
-                new Tuple<AmmoType, int>(AmmoType.Bullets, 300),
-                new Tuple<AmmoType, int>(AmmoType.Energy, 40),
+                new Misc.Tuple<AmmoType, int>(AmmoType.Bullets, 300),
+                new Misc.Tuple<AmmoType, int>(AmmoType.Energy, 40),
             })
         {
         }
 
-        public AmmoContainer(IList<Tuple<AmmoType, int>> maxAmounts)
+        public AmmoContainer(IList<Misc.Tuple<AmmoType, int>> maxAmounts)
         {
             _maxAmounts = maxAmounts.ToDictionary(t => t.Item1, t => t.Item2);
             _amounts = new Dictionary<AmmoType, int>();

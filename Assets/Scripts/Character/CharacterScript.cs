@@ -23,8 +23,12 @@ public class CharacterScript : MonoBehaviour
         var damageTrigger = GetComponent<TakeDamageTrigger>();
         damageTrigger.OnTakeDamage += TakeDamage;
 
-        UIScript.Instance.UpdateLives(_lives);
-        UIScript.Instance.UpdateAmmo(_ammoContainer.AmmoAmmount(AmmoType.Bullets));
+        var UI = UIScript.Instance;
+        if (UI != null)
+        {
+            UI.UpdateLives(_lives);
+            UI.UpdateAmmo(_ammoContainer.AmmoAmmount(AmmoType.Bullets));
+        }
     }
 
     private void TakeDamage(int damage)

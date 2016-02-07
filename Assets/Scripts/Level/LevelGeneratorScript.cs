@@ -1,5 +1,8 @@
-﻿using Assets.Scripts.LevelObjectives;
+﻿using System;
+using Assets.Scripts.Level;
+using Assets.Scripts.LevelObjectives;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Assets.Scripts
 {
@@ -9,13 +12,16 @@ namespace Assets.Scripts
         public int MapHeight;
         public int MonsterCount = 30;
 
+        public int VisibilityRadius = 9;
+        public int MaxRadius = 12;
+
         public Transform WallTile;
         public Transform GroudTile;
         public Transform Player;
         public Transform Monster;
 
         private readonly int _maxTries = 200;
-        private MapGenerator _map;
+        private TileMap _map;
         private GameObject _tilesGameObject;
         private GameObject _monstersGameObject;
 
@@ -24,13 +30,11 @@ namespace Assets.Scripts
 
         public void Awake()
         {
-            var levelTransform = GameObject.Find("Level").transform;
-
             _tilesGameObject = new GameObject("Tiles");
-            _tilesGameObject.transform.parent = levelTransform;
+            _tilesGameObject.transform.parent = transform;
 
             _monstersGameObject = new GameObject("Monsters");
-            _monstersGameObject.transform.parent = levelTransform;
+            _monstersGameObject.transform.parent = transform;
 
             _levelObjective = new KillAllMonstersObjective(_monstersGameObject);
 
@@ -43,6 +47,9 @@ namespace Assets.Scripts
             {
                 Restart();
             }
+
+            var currentTile = GetTileFromPosition(Player.position);
+            ApplyTileVisibility(currentTile.X, currentTile.Y, VisibilityRadius, MaxRadius);
         }
 
         public void Restart()
@@ -59,8 +66,21 @@ namespace Assets.Scripts
             Player.position = startPosition;
 
             GenerateMonsters();
+            ApplyTileVisibility(0, 0, 0, 1000);
 
             _isRestarting = false;
+        }
+
+        public void ApplyTileVisibility(int x, int y, int visibilityRadius, int maxRadius)
+        {
+            for (int i = Math.Max(0, x - maxRadius); i < Math.Min(_map.MapWidth, x + maxRadius); i++)
+            {
+                for (int j = Math.Max(0, y - maxRadius); j < Math.Min(_map.MapHeight, y + maxRadius); j++)
+                {
+                    var r2 = (x - i)*(x - i) + (y - j)*(y - j);
+                    _map[i, j].IsVisible = r2 < visibilityRadius*visibilityRadius;
+                }
+            }
         }
 
         private void ClearTiles()
@@ -81,23 +101,39 @@ namespace Assets.Scripts
 
         private void GenerateTiles(int mapWidth, int mapHeight, float tileWidth, float tileHeight)
         {
-            _map = new MapGenerator(mapWidth, mapHeight);
+            var map = new MapGenerator(mapWidth, mapHeight);
+            _map = new TileMap(map.TileMap);
             for (int i = 0; i < mapWidth; i++)
             {
                 for (int j = 0; j < mapHeight; j++)
                 {
-                    var tile = _map.TileMap[i, j];
+                    var tile = map.TileMap[i, j];
+                    Transform newTransform = null;
 
                     switch (tile)
                     {
                         case MapGenerator.TileType.Wall:
-                            var tileGameObject = (Transform)Instantiate(WallTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
-                            tileGameObject.transform.parent = _tilesGameObject.transform;
+                            newTransform = (Transform)Instantiate(WallTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
+
                             break;
                         case MapGenerator.TileType.Free:
-                            var woodGameObject = (Transform)Instantiate(GroudTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
-                            woodGameObject.transform.parent = _tilesGameObject.transform;
+                            newTransform = (Transform)Instantiate(GroudTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
                             break;
+                    }
+
+                    if (newTransform != null)
+                    {
+                        newTransform.transform.parent = _tilesGameObject.transform;
+                        _map[i, j].GameObject = newTransform.gameObject;
+                        _map[i, j].AfterVisibilityChanged =
+                            t =>
+                            {
+                                var spriteRenderer = t.GameObject.GetComponent<SpriteRenderer>();
+                                if (spriteRenderer != null)
+                                {
+                                    spriteRenderer.enabled = t.IsVisible;
+                                }
+                            };
                     }
                 }
             }
@@ -113,6 +149,15 @@ namespace Assets.Scripts
             }
         }
 
+        private Tile GetTileFromPosition(Vector2 position)
+        {
+            var bounds = WallTile.GetComponent<Renderer>().bounds.size;
+            var x = position.x / bounds.x;
+            var y = position.y / bounds.y;
+
+            return _map[(int) x, (int) y];
+        }
+
         private Vector2 GetRandomFreePosition()
         {
             var position = Vector2.zero;
@@ -124,7 +169,7 @@ namespace Assets.Scripts
                 var x = Random.Range(0, _map.MapWidth - 1);
                 var y = Random.Range(0, _map.MapHeight - 1);
 
-                if (_map.TileMap[x, y] == MapGenerator.TileType.Free)
+                if (_map[x, y].TileType == MapGenerator.TileType.Free)
                 {
                     position = new Vector2(bounds.x * x, bounds.y * y);
                 }
