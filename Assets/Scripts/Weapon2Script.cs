@@ -41,7 +41,7 @@ public class Weapon2Script : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other)
     {
         // prevent multihits of same target
-        Debug.LogFormat("Collided with {0}", other.GetInstanceID());
+        // Debug.LogFormat("Collided with {0}", other.GetInstanceID());
         if (_alreadyHitTargets.Contains(other.GetInstanceID())) return;
         _alreadyHitTargets.Add(other.GetInstanceID());
 

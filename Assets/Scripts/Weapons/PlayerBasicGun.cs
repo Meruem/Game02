@@ -29,7 +29,7 @@ namespace Assets.Scripts.Weapons
         {
             if (!_weaponStateMachine.TryFire()) return;
 
-            Debug.Log("Bullets: " + _ammoContainer.AmmoAmmount(AmmoType.Bullets));
+            // Debug.Log("Bullets: " + _ammoContainer.AmmoAmmount(AmmoType.Bullets));
             if (_ammoContainer.HasEnaughAmmo(AmmoType.Bullets, 1))
             {
                 var bullet = BulletObjectFactory.CreateBullet(position, degAngle, _bulletPrototype);

@@ -7,12 +7,24 @@ public class UIScript : MonoBehaviour
 
     public Text AmmoText;
     public Text LivesText;
+    public Text FPSText;
 
-	// Use this for initialization
-	void Start ()
+    private float _deltaTime;
+
+    // Use this for initialization
+    void Start ()
 	{
 	    Instance = this;
 	}
+
+    void Update()
+    {
+        _deltaTime += (Time.deltaTime - _deltaTime) * 0.1f;
+        if (FPSText != null)
+        {
+            FPSText.text = string.Format("FPS: {0}", 1.0f/_deltaTime);
+        }
+    }
 
     public void UpdateAmmo(int ammo)
     {

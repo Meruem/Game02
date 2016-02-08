@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Assets.Scripts.Level;
 using Assets.Scripts.LevelObjectives;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace Assets.Scripts
         private TileMap _map;
         private GameObject _tilesGameObject;
         private GameObject _monstersGameObject;
+        private GameObject _collidersGameObject;
 
         private ILevelObjective _levelObjective;
         private bool _isRestarting;
@@ -35,6 +37,9 @@ namespace Assets.Scripts
 
             _monstersGameObject = new GameObject("Monsters");
             _monstersGameObject.transform.parent = transform;
+
+            _collidersGameObject = new GameObject("Colliders");
+            _collidersGameObject.transform.parent = transform;
 
             _levelObjective = new KillAllMonstersObjective(_monstersGameObject);
 
@@ -48,8 +53,8 @@ namespace Assets.Scripts
                 Restart();
             }
 
-            var currentTile = GetTileFromPosition(Player.position);
-            ApplyTileVisibility(currentTile.X, currentTile.Y, VisibilityRadius, MaxRadius);
+            //var currentTile = GetTileFromPosition(Player.position);
+            //ApplyTileVisibility(currentTile.X, currentTile.Y, VisibilityRadius, MaxRadius);
         }
 
         public void Restart()
@@ -59,14 +64,16 @@ namespace Assets.Scripts
             _isRestarting = true;
             ClearTiles();
             ClearMonsters();
+            ClearColliders();
 
             var bounds = WallTile.GetComponent<Renderer>().bounds.size;
             GenerateTiles(MapWidth, MapHeight, bounds.x, bounds.y);
+            GenerateColliders();
             var startPosition = GetRandomFreePosition();
             Player.position = startPosition;
 
             GenerateMonsters();
-            ApplyTileVisibility(0, 0, 0, 1000);
+            //ApplyTileVisibility(0, 0, 0, 1000);
 
             _isRestarting = false;
         }
@@ -99,6 +106,14 @@ namespace Assets.Scripts
             }
         }
 
+        private void ClearColliders()
+        {
+            for (int i = _collidersGameObject.transform.childCount - 1; i >= 0; i--)
+            {
+                Destroy(_collidersGameObject.transform.GetChild(i).gameObject);
+            }
+        }
+
         private void GenerateTiles(int mapWidth, int mapHeight, float tileWidth, float tileHeight)
         {
             var map = new MapGenerator(mapWidth, mapHeight);
@@ -114,7 +129,6 @@ namespace Assets.Scripts
                     {
                         case MapGenerator.TileType.Wall:
                             newTransform = (Transform)Instantiate(WallTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
-
                             break;
                         case MapGenerator.TileType.Free:
                             newTransform = (Transform)Instantiate(GroudTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
@@ -178,6 +192,84 @@ namespace Assets.Scripts
             }
 
             return position;
+        }
+
+        private void GenerateColliders()
+        {
+            var bounds = WallTile.GetComponent<Renderer>().bounds.size;
+            var finishedTiles = new bool[MapWidth, MapHeight];
+            var rectangles = new List<Rectangle>();
+            for (var i = 0; i < MapWidth; i++)
+            {
+                for (var j = 0; j < MapHeight; j++)
+                {
+                    if (finishedTiles[i,j]) continue;
+
+                    if (_map[i, j].TileType == MapGenerator.TileType.Wall)
+                    {
+                        var rect = FindLargestRect(i, j, finishedTiles);
+                        rectangles.Add(rect);
+                    }
+                }
+            }
+
+            foreach (var rect in rectangles)
+            {
+                var go = new GameObject("Collider");
+                go.transform.parent = _collidersGameObject.transform;
+                var coll = go.AddComponent<BoxCollider2D>();
+                coll.offset = new Vector2(rect.X*bounds.x + rect.Width * bounds.x / 2 - bounds.x / 2 , rect.Y*bounds.y + rect.Height * bounds.y / 2 - bounds.y /2);
+                coll.size = new Vector2(rect.Width * bounds.x, rect.Height * bounds.y);
+                go.layer = LayerMask.NameToLayer("ShadowLayer");
+            }
+        }
+
+        private Rectangle FindLargestRect(int x, int y, bool[,] finishedTiles)
+        {
+            var rect = new Rectangle {X = x, Y = y};
+
+            int width = 0;
+            int height = 1;
+
+            while (x + width < MapWidth && !finishedTiles[x+width, y] && _map[x + width, y].TileType == MapGenerator.TileType.Wall)
+            {
+                finishedTiles[x + width, y] = true;
+                width++;
+            }
+
+            var free = true;
+            while (free && y + height < MapHeight)
+            {
+                for (var i = x; i < x + width; i++)
+                {
+                    if (finishedTiles[i, y + height] || _map[i, y + height].TileType != MapGenerator.TileType.Wall)
+                    {
+                        free = false;
+                        break;
+                    }
+                }
+                if (free)
+                {
+                    for (var i = x; i < x + width; i++)
+                    {
+                        finishedTiles[i, y + height] = true;
+                    }
+                    height++;
+                }
+            }
+
+            rect.Height = height;
+            rect.Width = width;
+
+            return rect;
+        }
+
+        private struct Rectangle
+        {
+            public int X;
+            public int Y;
+            public int Width;
+            public int Height;
         }
     }
 }
