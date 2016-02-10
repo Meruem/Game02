@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Messages;
+using Assets.Scripts.Misc;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -6,16 +8,15 @@ namespace Assets.Scripts
     public class MoveScript : MonoBehaviour
     {
         public float MaxSpeed = 5.0f;
-        public int FacingAngleAdjustment;
         
         private Animator _animator;
         private Rigidbody2D _cachedRigidBody2D;
-        public Transform Body;
 
         private void Start()
         {
-            _animator = Body.GetComponent<Animator>();
+            _animator = GetComponentInChildren<Animator>();
             _cachedRigidBody2D = GetComponent<Rigidbody2D>();
+            this.GetPubSub().SubscribeInContext<MoveInDirectionMessage>(m => Move(((MoveInDirectionMessage)m).Direction));
         }
         
         public void Move(Vector2 movement)

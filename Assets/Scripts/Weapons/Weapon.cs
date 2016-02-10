@@ -1,5 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Assets.Scripts.Messages;
+using Assets.Scripts.Misc;
 using Assets.Scripts.Weapons;
 using UnityEngine;
 
@@ -44,11 +45,7 @@ namespace Assets.Scripts
             if (_alreadyHitTargets.Contains(other.GetInstanceID())) return;
             _alreadyHitTargets.Add(other.GetInstanceID());
 
-            var takeDamage = other.GetComponent<TakeDamageTrigger>();
-            if (takeDamage != null)
-            {
-                takeDamage.TakeDamage(WeaponDamage);
-            }
+            other.GetPubSub().PublishMessageInContext(new TakeDamageMessage(WeaponDamage));
         }
     }
 }

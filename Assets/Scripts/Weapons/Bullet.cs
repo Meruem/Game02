@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Messages;
+using Assets.Scripts.Misc;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -9,12 +11,7 @@ namespace Assets.Scripts
 
         void OnCollisionEnter2D(Collision2D coll)
         {
-            var damageTrigger = coll.gameObject.GetComponent<TakeDamageTrigger>();
-            if (damageTrigger != null)
-            {
-                damageTrigger.TakeDamage(Damage);
-            }
-
+            coll.gameObject.GetPubSub().PublishMessageInContext(new TakeDamageMessage(Damage));
             Destroy(gameObject);
         }
     }
