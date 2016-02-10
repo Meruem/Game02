@@ -9,25 +9,30 @@ using Random = UnityEngine.Random;
 public class MonsterScript : MonoBehaviour 
 {
     public int MaxLives = 3;
+    public BulletPrototype BulletPrototype;
 
     private MoveScript _moveScript;
     private float _direction;
     private int _lives;
     private TakeDamageTrigger _takeDamageTrigger;
+    private GameObject _dynamicGameObjects;
 
-    private readonly BulletPrototype _bulletPrototype = new BulletPrototype
+    //{
+    //    Damage = 1,
+    //    Speed = 6,
+    //    PrefabName = "MonsterBullet"
+    //};
+
+    public void Awake()
     {
-        Damage = 1,
-        Speed = 6,
-        PrefabName = "MonsterBullet"
-    };
-
-    // Use this for initialization
+        _moveScript = GetComponent<MoveScript>();
+        _takeDamageTrigger = GetComponent<TakeDamageTrigger>();
+        _dynamicGameObjects = GameObject.Find("Dynamic Objects");
+    }
+    
     public void Start ()
 	{
         _lives = MaxLives;
-	    _moveScript = GetComponent<MoveScript>();
-	    _takeDamageTrigger = GetComponent<TakeDamageTrigger>();
         _takeDamageTrigger.OnTakeDamage += OnTakeDamage;
 	    StartCoroutine(ChangeDirection());
         StartCoroutine(StartShooting());
@@ -49,8 +54,14 @@ public class MonsterScript : MonoBehaviour
 
         while (true)
         {
-            var bullet = BulletObjectFactory.CreateBullet(transform.position, Random.Range(0, 16) * 360f / 16, _bulletPrototype);
-            bullet.gameObject.layer = (int)Layers.MonsterBulletes;
+            if (BulletPrototype.Prefab == null)
+            {
+                Debug.LogWarning("Prototype is null.");
+            }
+            else
+            {
+                BulletObjectFactory.CreateBullet(transform.position, Random.Range(0, 16) * 360f / 16, BulletPrototype, (int)Layers.MonsterBulletes, _dynamicGameObjects.transform);
+            }
             yield return new WaitForSeconds(Random.Range(1, 3));
         }
     }

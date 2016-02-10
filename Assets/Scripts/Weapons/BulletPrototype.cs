@@ -1,9 +1,13 @@
-﻿namespace Assets.Scripts.Weapons
+﻿using System;
+using UnityEngine;
+
+namespace Assets.Scripts.Weapons
 {
-    public struct BulletPrototype
+    [Serializable]
+    public class BulletPrototype
     {
         public int Speed;
         public int Damage;
-        public string PrefabName;
+        public Transform Prefab;
     }
 }

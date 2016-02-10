@@ -1,43 +1,37 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts.Weapons
 {
-    class PlayerBasicGun : WeaponBase
+    public class PlayerBasicGun : MonoBehaviour
     {
-        private readonly AmmoContainer _ammoContainer;
-        private readonly WeaponStateMachine _weaponStateMachine;
+        public AmmoContainer AmmoContainer; 
+        public float WeaponCooldown;    // Time until next shot is ready
+        public BulletPrototype BulletPrototype;
 
-        private readonly BulletPrototype _bulletPrototype = new BulletPrototype
-        {
-            Damage = 3,
-            Speed = 10,
-            PrefabName = "Bullet"
-        };
+        public List<BulletPrototype> List;
 
-        public PlayerBasicGun(AmmoContainer ammoContainer, float weaponCooldown)
+        private WeaponStateMachine _weaponStateMachine;
+        private GameObject _dynamicGameObjects;
+
+        public void Awake()
         {
-            _ammoContainer = ammoContainer;
-            _weaponStateMachine = new WeaponStateMachine(weaponCooldown, 0);
+            _weaponStateMachine = new WeaponStateMachine(WeaponCooldown, 0);
+            _dynamicGameObjects = GameObject.Find("Dynamic Objects");
         }
 
-        public override string Name
+        public void Fire(Vector2 position, float degAngle)
         {
-            get { return "Basic Gun"; }
-        }
-
-        public override void Fire(Vector2 position, float degAngle)
-        {
-            if (!_weaponStateMachine.TryFire()) return;
-
-            // Debug.Log("Bullets: " + _ammoContainer.AmmoAmmount(AmmoType.Bullets));
-            if (_ammoContainer.HasEnaughAmmo(AmmoType.Bullets, 1))
+            if (AmmoContainer == null)
             {
-                var bullet = BulletObjectFactory.CreateBullet(position, degAngle, _bulletPrototype);
-                bullet.gameObject.layer = (int) Layers.PlayerBullets;
-                _ammoContainer.RemoveAmmo(AmmoType.Bullets, 1);
+                Debug.LogWarning("Ammo container not found for this gun!");
             }
-
-            base.Fire(position, degAngle);
+            else if (AmmoContainer.HasEnaughAmmo(AmmoType.Bullets, 1))
+            {
+                if (!_weaponStateMachine.TryFire()) return;
+                BulletObjectFactory.CreateBullet(position, degAngle, BulletPrototype, (int)Layers.PlayerBullets, _dynamicGameObjects.transform);
+                AmmoContainer.RemoveAmmo(AmmoType.Bullets, 1);
+            }
         }
     }
 }

@@ -6,6 +6,7 @@ namespace Assets.Scripts.Visibility
     public class VisibilityToPlayer : MonoBehaviour
     {
         public float MaxDistance;
+        public GameObject Target;
 
         private Renderer _renderer;
         private Transform _mainPlayer;

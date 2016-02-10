@@ -5,11 +5,13 @@ using UnityEngine;
 [RequireComponent(typeof(MoveScript))]
 public class CharacterScript : MonoBehaviour
 {
+    public AmmoContainer AmmoContainer;
+    public PlayerBasicGun Gun;
+    //private WeaponBase _activeWeapon;
+
     private bool _mousePressed;
     private MoveScript _moveScript;
     private Transform _weaponArc;
-    private AmmoContainer _ammoContainer;
-    private WeaponBase _activeWeapon;
 
     private int _lives = 10;
 
@@ -17,9 +19,8 @@ public class CharacterScript : MonoBehaviour
     {
         _moveScript = GetComponent<MoveScript>();
         _weaponArc = transform.FindChild("Weapon");
-        _ammoContainer = new AmmoContainer();
-        _ammoContainer.AddAmmo(AmmoType.Bullets, 100);
-        _activeWeapon = new PlayerBasicGun(_ammoContainer, 0.2f);
+        //AmmoContainer = new AmmoContainer();
+        if (AmmoContainer != null) AmmoContainer.AddAmmo(AmmoType.Bullets, 100);
         var damageTrigger = GetComponent<TakeDamageTrigger>();
         damageTrigger.OnTakeDamage += TakeDamage;
 
@@ -27,7 +28,11 @@ public class CharacterScript : MonoBehaviour
         if (UI != null)
         {
             UI.UpdateLives(_lives);
-            UI.UpdateAmmo(_ammoContainer.AmmoAmmount(AmmoType.Bullets));
+
+            if (AmmoContainer != null)
+            {
+                UI.UpdateAmmo(AmmoContainer.AmmoAmmount(AmmoType.Bullets));
+            }
         }
     }
 
@@ -63,7 +68,14 @@ public class CharacterScript : MonoBehaviour
 
     private void Fire()
     {
-        _activeWeapon.Fire(transform.position, _weaponArc.rotation.eulerAngles.z);
-        UIScript.Instance.UpdateAmmo(_ammoContainer.AmmoAmmount(AmmoType.Bullets));
+        if (Gun != null)
+        {
+            Gun.Fire(transform.position, _weaponArc.rotation.eulerAngles.z);
+        }
+
+        if (AmmoContainer != null)
+        {
+            UIScript.Instance.UpdateAmmo(AmmoContainer.AmmoAmmount(AmmoType.Bullets));
+        }
     }
 }

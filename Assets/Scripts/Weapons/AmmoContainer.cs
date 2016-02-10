@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.Misc;
+using UnityEngine;
 
 namespace Assets.Scripts.Weapons
 {
-    public class AmmoContainer
+    public class AmmoContainer : MonoBehaviour
     {
         private readonly Dictionary<AmmoType, int> _maxAmounts;
         private readonly Dictionary<AmmoType, int> _amounts;
