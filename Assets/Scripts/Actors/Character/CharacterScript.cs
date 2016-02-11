@@ -18,8 +18,6 @@ public class CharacterScript : MonoBehaviour
         var UI = UIScript.Instance;
         if (UI != null)
         {
-            UI.UpdateLives(_lives);
-
             if (AmmoContainer != null)
             {
                 UI.UpdateAmmo(AmmoContainer.AmmoAmmount(AmmoType.Bullets));
