@@ -52,9 +52,6 @@ namespace Assets.Scripts
             {
                 Restart();
             }
-
-            //var currentTile = GetTileFromPosition(Player.position);
-            //ApplyTileVisibility(currentTile.X, currentTile.Y, VisibilityRadius, MaxRadius);
         }
 
         public void Restart()
@@ -73,8 +70,7 @@ namespace Assets.Scripts
             Player.position = startPosition;
 
             GenerateMonsters();
-            //ApplyTileVisibility(0, 0, 0, 1000);
-
+ 
             _isRestarting = false;
         }
 
