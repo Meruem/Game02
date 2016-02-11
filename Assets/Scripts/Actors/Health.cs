@@ -8,10 +8,12 @@ namespace Assets.Scripts.Actors
     {
         public int StartingLives;
         public int Lives;
+        
+        public Action<int> OnTakeDamageAction = OnTakeDamage;
 
         public void Awake()
         {
-            this.GetPubSub().Subscribe<TakeDamageMessage>((m => OnTakeDamage(((TakeDamageMessage)m).Damage)));
+            this.GetPubSub().Subscribe<TakeDamageMessage>((m => OnTakeDamageAction(((TakeDamageMessage)m).Damage)));
         }
 
         public void Start()
