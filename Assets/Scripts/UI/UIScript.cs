@@ -16,7 +16,7 @@ public class UIScript : MonoBehaviour
 	{
 	    Instance = this;
 	    
-	    PubSub.GlobalPubSub.Subscribe<GUIHealthUpdateMessage>(m => UpdateLives(((GUIHealthUpdateMessage)m).NewHealth));
+	    PubSub.GlobalPubSub.Subscribe<HealthChangedMessage>(m => UpdateLives(((HealthChangedMessage)m).NewHealth));
 	    PubSub.GlobalPubSub.Subscribe<AmmoChangedMessage>(m => 
 	    	{ 
 	    		var mes = (AmmoChangedMessage)m;
