@@ -6,29 +6,22 @@ using UnityEngine;
 
 namespace Assets.Scripts.Weapons
 {
+    [Serializable]
+    public class AmmoInfo
+    {
+        public AmmoType Type;
+        public int MaxAmount;
+        public int StartingAmount;
+    }
+    
     public class AmmoContainer : MonoBehaviour
     {
-        private readonly Dictionary<AmmoType, int> _maxAmounts;
         private readonly Dictionary<AmmoType, int> _amounts;
-
-        public AmmoContainer()
-            : this(new List<Misc.Tuple<AmmoType, int>>
-            {
-                new Misc.Tuple<AmmoType, int>(AmmoType.Bullets, 300),
-                new Misc.Tuple<AmmoType, int>(AmmoType.Energy, 40),
-            })
-        {
-        }
-
-        public AmmoContainer(IList<Misc.Tuple<AmmoType, int>> maxAmounts)
-        {
-            _maxAmounts = maxAmounts.ToDictionary(t => t.Item1, t => t.Item2);
-            _amounts = new Dictionary<AmmoType, int>();
-        }
+        public AmmoInfo[] Ammo;
 
         public void AddAmmo(AmmoType type, int amount)
         {
-            var max = _maxAmounts[type];
+            var max = Ammo.First(a => a.Type == type).MaxAmount;
 
             int newAmount = amount;
 
@@ -38,6 +31,10 @@ namespace Assets.Scripts.Weapons
             }
 
             _amounts[type] = Math.Min(newAmount, max);
+            if (newAmount != max)
+            {
+                PubSub.GlobalPubSub.Publish(new AmmoChangedMessage(type, newAmount));
+            }
         }
 
         public int AmmoAmmount(AmmoType type)
@@ -55,6 +52,7 @@ namespace Assets.Scripts.Weapons
             if (!HasEnaughAmmo(type, amount)) return;
 
             _amounts[type] -= amount;
+            PubSub.GlobalPubSub.Publish(new AmmoChangedMessage(type, _amounts[type]));
         }
     }
 }
