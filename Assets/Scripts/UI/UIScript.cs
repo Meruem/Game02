@@ -15,6 +15,8 @@ public class UIScript : MonoBehaviour
     void Start ()
 	{
 	    Instance = this;
+	    
+	    PubSub.GlobalPubSub.Subscribe<GUIHealthUpdateMessage>(m => UpdateLives(((GUIHealthUpdateMessage)m).NewHealth));
 	}
 
     void Update()
