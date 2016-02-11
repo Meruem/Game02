@@ -1,10 +1,10 @@
 namespace Game02.Assets.Scripts.Messages
 {
-    public class GUIHealthUpdateMessage : IMessage
+    public class HealthChangedMessage : IMessage
     {
         public int NewHealth { get; private set; }
         
-        public GUIHealthUpdateMessage(int newHealth)
+        public HealthChangedMessage(int newHealth)
         {
             NewHealth = newHealth;
         }
