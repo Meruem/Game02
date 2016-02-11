@@ -10,7 +10,7 @@ namespace Assets.Scripts.Actors
             health.OnTakeDamageAction = dmg => 
                 {
                     originalAction(dmg);
-                    PubSub.GlobalPubSub.Publish(new GUIHealthUpdateMessage(health.Lives));
+                    PubSub.GlobalPubSub.Publish(new HealthChangedMessage(health.Lives));
                 }
         }
     }
