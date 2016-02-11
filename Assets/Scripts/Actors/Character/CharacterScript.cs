@@ -4,15 +4,12 @@ using Assets.Scripts.Misc;
 using Assets.Scripts.Weapons;
 using UnityEngine;
 
-[RequireComponent(typeof(MoveScript))]
 public class CharacterScript : MonoBehaviour
 {
     public AmmoContainer AmmoContainer;
     public PlayerBasicGun Gun;
 
     public Transform WeaponArc;
-
-    private int _lives = 10;
 
     void Start()
     {
@@ -30,12 +27,6 @@ public class CharacterScript : MonoBehaviour
         }
 
         this.GetPubSub().SubscribeInContext<FireMessage>(m => Fire());
-    }
-
-    private void TakeDamage(int damage)
-    {
-        _lives -= damage;
-        UIScript.Instance.UpdateLives(_lives);
     }
 
     private void Fire()
