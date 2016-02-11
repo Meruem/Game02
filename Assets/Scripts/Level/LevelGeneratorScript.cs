@@ -42,6 +42,8 @@ namespace Assets.Scripts
             _collidersGameObject.transform.parent = transform;
 
             _levelObjective = new KillAllMonstersObjective(_monstersGameObject);
+            
+            PubSub.GlobalPubSub.Subscribe<RestartLevelMessage>(m => Restart());
 
             Restart();
         }
