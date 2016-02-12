@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Messages;
+using Assets.Scripts.Misc;
+using Assets.Scripts.Weapons;
+using Game02.Assets.Scripts.Messages;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class UIScript : MonoBehaviour
@@ -11,8 +15,7 @@ public class UIScript : MonoBehaviour
 
     private float _deltaTime;
 
-    // Use this for initialization
-    void Start ()
+    public void Start()
 	{
 	    Instance = this;
 	    
@@ -28,7 +31,7 @@ public class UIScript : MonoBehaviour
 		
 	}
 
-    void Update()
+    public void Update()
     {
         _deltaTime += (Time.deltaTime - _deltaTime) * 0.1f;
         if (FPSText != null)

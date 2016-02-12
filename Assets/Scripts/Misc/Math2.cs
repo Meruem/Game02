@@ -9,5 +9,10 @@ namespace Assets.Scripts
         {
             return new Vector2((float) Math.Cos(angle), (float) Math.Sin(angle)).normalized;
         }
+
+        public static Vector2 AngleDegToVector(float angle)
+        {
+            return AngleRadToVector(Mathf.Deg2Rad * angle);
+        }
     }
 }

@@ -12,14 +12,6 @@ public class CharacterScript : MonoBehaviour
 
     void Start()
     {
-        this.GetPubSub().SubscribeInContext<FireMessage>(m => Fire());
-    }
-
-    private void Fire()
-    {
-        if (Gun != null)
-        {
-            Gun.Fire(transform.position, WeaponArc.rotation.eulerAngles.z);
-        }
+        //this.GetPubSub().SubscribeInContext<FireMessage>(m => Fire());
     }
 }

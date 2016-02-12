@@ -17,7 +17,7 @@ public class MonsterScript : MonoBehaviour
 
     public void Awake()
     {
-        _dynamicGameObjects = GameObject.Find("Dynamic Objects");
+        _dynamicGameObjects = GameObjectEx.Find(GameObjectNames.DynamicObjects);
     }
     
     public void Start ()
@@ -38,7 +38,7 @@ public class MonsterScript : MonoBehaviour
             }
             else
             {
-                BulletObjectFactory.CreateBullet(transform.position, Random.Range(0, 16) * 360f / 16, BulletPrototype, (int)Layers.MonsterBulletes, _dynamicGameObjects.transform);
+                BulletObjectFactory.CreateBullet(transform.position, Random.Range(0, 16) * 360f / 16, BulletPrototype, Layers.GetLayer(LayerName.MonsterBullets), _dynamicGameObjects.transform);
             }
             yield return new WaitForSeconds(Random.Range(1, 3));
         }

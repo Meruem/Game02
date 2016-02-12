@@ -1,43 +1,37 @@
-﻿using Assets.Scripts.Character;
+﻿using Assets.Scripts.Misc;
 using UnityEngine;
 
 namespace Assets.Scripts.Visibility
 {
+    [RequireComponent(typeof (Renderer))]
     public class VisibilityToPlayer : MonoBehaviour
     {
         public float MaxDistance;
-        public GameObject Target;
 
         private Renderer _renderer;
         private Transform _mainPlayer;
         private int _layerMask;
 
-        void Start()
+        public void Start()
         {
             _renderer = GetComponent<Renderer>();
-            var shadowLayer = LayerMask.NameToLayer("ShadowLayer");
-            _layerMask = (1 << shadowLayer) | (1 << (int)Layers.Player);
+            _mainPlayer = GameObjectEx.FindGameObjectWithTag(GameObjectTags.Player).transform;
+            var shadowLayer = Layers.GetLayer(LayerName.ShadowLayer);
+            _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
         }
 
-        void Update()
+        public void Update()
         {
-            if (_mainPlayer == null)
+            var outside = (_mainPlayer.position - transform.position).magnitude > MaxDistance;
+            if (outside)
             {
-                _mainPlayer = Player.MainPlayer == null ? null : Player.MainPlayer.transform;
+                _renderer.enabled = false;
             }
-
-            if (_mainPlayer != null)
+            else
             {
-                var outside = (_mainPlayer.position - transform.position).magnitude > MaxDistance;
-                if (outside)
-                {
-                    _renderer.enabled = false;
-                }
-                else
-                {
-                    var hits = Physics2D.Raycast(transform.position, _mainPlayer.position - transform.position, MaxDistance, _layerMask);
-                    _renderer.enabled = hits.collider == null || hits.collider.transform == _mainPlayer;
-                }
+                var hits = Physics2D.Raycast(transform.position, _mainPlayer.position - transform.position, MaxDistance,
+                    _layerMask);
+                _renderer.enabled = hits.collider == null || hits.collider.transform == _mainPlayer;
             }
         }
     }

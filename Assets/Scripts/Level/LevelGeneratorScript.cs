@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Assets.Scripts.Level;
 using Assets.Scripts.LevelObjectives;
+using Assets.Scripts.Messages;
+using Assets.Scripts.Misc;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -32,13 +34,13 @@ namespace Assets.Scripts
 
         public void Awake()
         {
-            _tilesGameObject = new GameObject("Tiles");
+            _tilesGameObject = new GameObject(GameObjectNameMapping.GetObjectName(GameObjectNames.Tiles));
             _tilesGameObject.transform.parent = transform;
 
-            _monstersGameObject = new GameObject("Monsters");
+            _monstersGameObject = new GameObject(GameObjectNameMapping.GetObjectName(GameObjectNames.Monsters));
             _monstersGameObject.transform.parent = transform;
 
-            _collidersGameObject = new GameObject("Colliders");
+            _collidersGameObject = new GameObject(GameObjectNameMapping.GetObjectName(GameObjectNames.Colliders));
             _collidersGameObject.transform.parent = transform;
 
             _levelObjective = new KillAllMonstersObjective(_monstersGameObject);
@@ -213,12 +215,12 @@ namespace Assets.Scripts
 
             foreach (var rect in rectangles)
             {
-                var go = new GameObject("Collider");
+                var go = new GameObject(GameObjectNameMapping.GetObjectName(GameObjectNames.Collider));
                 go.transform.parent = _collidersGameObject.transform;
                 var coll = go.AddComponent<BoxCollider2D>();
                 coll.offset = new Vector2(rect.X*bounds.x + rect.Width * bounds.x / 2 - bounds.x / 2 , rect.Y*bounds.y + rect.Height * bounds.y / 2 - bounds.y /2);
                 coll.size = new Vector2(rect.Width * bounds.x, rect.Height * bounds.y);
-                go.layer = LayerMask.NameToLayer("ShadowLayer");
+                go.layer = Layers.GetLayer(LayerName.ShadowLayer);
             }
         }
 

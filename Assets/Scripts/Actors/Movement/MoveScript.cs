@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.Messages;
+﻿using System.Collections;
+using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using UnityEngine;
 
@@ -12,27 +13,46 @@ namespace Assets.Scripts
         private Animator _animator;
         private Rigidbody2D _cachedRigidBody2D;
 
+        private bool _isInForcedMovement;
+
         private void Start()
         {
             _animator = GetComponentInChildren<Animator>();
             _cachedRigidBody2D = GetComponent<Rigidbody2D>();
             this.GetPubSub().SubscribeInContext<MoveInDirectionMessage>(m => Move(((MoveInDirectionMessage)m).Direction));
+            this.GetPubSub().SubscribeInContext<ForceMovementMessage>(m => ForceMove((ForceMovementMessage)m));
         }
-        
+
+        private void ForceMove(ForceMovementMessage forceMovementMessage)
+        {
+            StartCoroutine(ForceMoveCoroutine(forceMovementMessage));
+        }
+
+        private IEnumerator ForceMoveCoroutine(ForceMovementMessage message)
+        {
+            _isInForcedMovement = true;
+            Move(message.Direction, message.Speed);
+            yield return new WaitForSeconds(message.ForwardTime);
+            Move(Vector2.zero, 0);
+            yield return new WaitForSeconds(message.StopTime);
+            _isInForcedMovement = false;
+        }
+
         public void Move(Vector2 movement)
+        {
+            if (_isInForcedMovement) return;
+            Move(movement, MaxSpeed);
+        }
+
+        public void Move(Vector2 movement, float speed)
         {
             if (_cachedRigidBody2D == null) return;
 
-            //move the rigid body, which is part of the physics system
-            //This ensures smooth movement.
-            _cachedRigidBody2D.velocity = new Vector2(movement.x * MaxSpeed, movement.y * MaxSpeed);
+            _cachedRigidBody2D.velocity = new Vector2(movement.x * speed, movement.y * speed);
 
-            //take the absolute value and add, because x or y 
-            //may be negative and potentially cancel eachother out.
-            float speed = Mathf.Abs(movement.x) + Mathf.Abs(movement.y);
+            float aniSpeed = Mathf.Abs(movement.x) + Mathf.Abs(movement.y);
 
-            //set the speed variable in the animation component to ensure proper state.
-            _animator.SetFloat("Speed", speed);
+            _animator.SetFloat("Speed", aniSpeed);
         }         
     }
 }

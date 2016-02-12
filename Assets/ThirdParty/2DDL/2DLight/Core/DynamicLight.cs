@@ -1618,7 +1618,7 @@ public class DynamicLight : MonoBehaviour {
 			//wait one frame
 			yield return null;
 
-			// Time to Remove
+			// forwardTime to Remove
 			if(ToChange.Count > 0 && objWithinFOV.Count > 0){
 				foreach (GameObject g in ToChange)
 				{

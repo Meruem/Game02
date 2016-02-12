@@ -1,3 +1,5 @@
+using Assets.Scripts.Messages;
+
 namespace Game02.Assets.Scripts.Messages
 {
     public class HealthChangedMessage : IMessage

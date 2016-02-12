@@ -1,5 +1,7 @@
-﻿using Assets.Scripts.Messages;
+﻿using System;
+using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
+using Game02.Assets.Scripts.Messages;
 using UnityEngine;
 
 namespace Assets.Scripts.Actors
@@ -8,12 +10,14 @@ namespace Assets.Scripts.Actors
     {
         public int StartingLives;
         public int Lives;
-        
-        public Action<int> OnTakeDamageAction = OnTakeDamage;
+        public bool NotifyHealthChanged = false;
 
         public void Awake()
         {
-            this.GetPubSub().Subscribe<TakeDamageMessage>((m => OnTakeDamageAction(((TakeDamageMessage)m).Damage)));
+            this.GetPubSub().Subscribe<TakeDamageMessage>(m =>
+            {
+                OnTakeDamage(((TakeDamageMessage) m).Damage); 
+            });
         }
 
         public void Start()
@@ -24,6 +28,11 @@ namespace Assets.Scripts.Actors
         private void OnTakeDamage(int damage)
         {
             Lives -= damage;
+            if (NotifyHealthChanged)
+            {
+                PubSub.GlobalPubSub.PublishMessage(new HealthChangedMessage(Lives));
+            }
+
             if (Lives <= 0)
             {
                 this.GetPubSub().PublishMessageInContext(new DeathMessage());

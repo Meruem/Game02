@@ -10,12 +10,35 @@ namespace Assets.Scripts.Misc
         private readonly Dictionary<Type, List<Action<IMessage>>> _subscribers = new Dictionary<Type, List<Action<IMessage>>>();
 
         private static PubSub _globalPubSub;
+        private static PubSubSettings _pubSubSettings;
 
         public static PubSub GlobalPubSub
         {
             get
             {
-                return _globalPubSub ?? (_globalPubSub = new PubSub()); 
+                if (_globalPubSub == null)
+                {
+                    var globalPubSubGameObjectName = GameObjectNameMapping.GetObjectName(GameObjectNames.GlobalPubSub);
+                    var go = GameObject.Find(globalPubSubGameObjectName) ?? new GameObject(globalPubSubGameObjectName);
+                    _globalPubSub = go.GetComponent<PubSub>() ?? go.AddComponent<PubSub>();
+                }
+
+                return _globalPubSub;
+            }
+        }
+
+        public static PubSubSettings PubSubSettings
+        {
+            get
+            {
+                if (_pubSubSettings == null)
+                {
+                    var name = GameObjectNameMapping.GetObjectName(GameObjectNames.PubSubSettings);
+                    var go = GameObject.Find(name) ?? new GameObject(name);
+                    _pubSubSettings = go.GetComponent<PubSubSettings>() ?? go.AddComponent<PubSubSettings>();
+                }
+
+                return _pubSubSettings;
             }
         }
 
@@ -29,10 +52,22 @@ namespace Assets.Scripts.Misc
         public void PublishMessage<TMessage>(TMessage message)
             where TMessage : IMessage
         {
+            if (PubSubSettings.DebugAllMessages)
+            {
+                Debug.LogFormat("[{0}] Published message: {1}", gameObject.GetInstanceID(), message);
+            }
+
             List<Action<IMessage>> list;
             if (_subscribers.TryGetValue(typeof (TMessage), out list))
             {
-                if (list == null) return;
+                if (list == null || list.Count == 0)
+                {
+                    if (PubSubSettings.DebugMissedMessages)
+                    {
+                        Debug.LogFormat("No subscriber was found for message of type {0}.", message);
+                    }
+                    return;
+                }
 
                 for (var i = 0; i < list.Count; i++)
                 {

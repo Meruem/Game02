@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using UnityEngine;
 
@@ -16,8 +17,16 @@ namespace Assets.Scripts.Weapons
     
     public class AmmoContainer : MonoBehaviour
     {
-        private readonly Dictionary<AmmoType, int> _amounts;
+        private readonly Dictionary<AmmoType, int> _amounts = new Dictionary<AmmoType, int>();
         public AmmoInfo[] Ammo;
+
+        public void Start()
+        {
+            foreach (var ammo in Ammo)
+            {
+                AddAmmo(ammo.Type, ammo.StartingAmount);
+            }
+        }
 
         public void AddAmmo(AmmoType type, int amount)
         {
@@ -33,7 +42,7 @@ namespace Assets.Scripts.Weapons
             _amounts[type] = Math.Min(newAmount, max);
             if (newAmount != max)
             {
-                PubSub.GlobalPubSub.Publish(new AmmoChangedMessage(type, newAmount));
+                PubSub.GlobalPubSub.PublishMessage(new AmmoChangedMessage(type, newAmount));
             }
         }
 
@@ -52,7 +61,7 @@ namespace Assets.Scripts.Weapons
             if (!HasEnaughAmmo(type, amount)) return;
 
             _amounts[type] -= amount;
-            PubSub.GlobalPubSub.Publish(new AmmoChangedMessage(type, _amounts[type]));
+            PubSub.GlobalPubSub.PublishMessage(new AmmoChangedMessage(type, _amounts[type]));
         }
     }
 }

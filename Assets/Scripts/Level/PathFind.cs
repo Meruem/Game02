@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using Alg;
 
 namespace PathFind
@@ -18,6 +17,18 @@ namespace PathFind
         public override string ToString()
         {
             return string.Format("Pos: {0}, {1}; G: {2}; H: {3}", Position.X, Position.Y, G, H);
+        }
+    }
+
+    public struct Point
+    {
+        public int X { get; private set; }
+        public int Y { get; private set; }
+
+        public Point(int x, int y) : this()
+        {
+            X = x;
+            Y = y;
         }
     }
 
@@ -54,7 +65,6 @@ namespace PathFind
         public List<Point> AStarFind(Point start, Point end, bool useTheta = false)
         {
             var open = new BinaryHeap<Node>(1000, (n1, n2) => -n1.F.CompareTo(n2.F));
-            var closed = new List<Node>();
             var startNode = _nodeMap[start.X, start.Y];
             startNode.G = 0;
             startNode.H = GetHeurestic(start, end); 
@@ -83,7 +93,6 @@ namespace PathFind
                 }
 
                 // add to closed and check neigbours
-                closed.Add(s);
                 s.IsInOpenList = false;
                 s.IsInClosedList = true;
 
