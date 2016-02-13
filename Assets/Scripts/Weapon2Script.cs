@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Messages;
@@ -10,8 +11,8 @@ using UnityEngine;
 public class Weapon2Script : MonoBehaviour
 {
     public int WeaponDamage = 2;
-    public float WeaponCooldown = 1; // In seconds
-    public float WeaponHitTime = 0.5f;
+    public float WeaponCooldown = 1; // From moment weapon is fired
+    public float WeaponHitTime = 0.5f; // Max -> animation can end before
     public float ForcedForwardTime = 0.3f;
     public float ForcedSpeed = 3;
     public float ForcedStopTime = 0.2f;
@@ -56,7 +57,7 @@ public class Weapon2Script : MonoBehaviour
 
         yield return new WaitForSeconds(WeaponHitTime);
         _animator.SetBool("IsSwinging", false);
-        yield return new WaitForSeconds(WeaponCooldown);
+        yield return new WaitForSeconds(Math.Max(WeaponCooldown - WeaponHitTime, 0));
         _canFire = true;
     }
 }

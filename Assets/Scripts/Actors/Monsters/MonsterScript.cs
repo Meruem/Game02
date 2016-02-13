@@ -29,7 +29,7 @@ public class MonsterScript : MonoBehaviour
 
     private IEnumerator StartSwinging()
     {
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(Random.Range(1, 3));
 
         while (true)
         {
@@ -41,7 +41,7 @@ public class MonsterScript : MonoBehaviour
 
     private IEnumerator StartShooting()
     {
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(Random.Range(1, 3));
 
         while (true)
         {

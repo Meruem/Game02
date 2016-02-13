@@ -3,18 +3,17 @@ using UnityEngine;
 
 namespace Assets.Scripts.Visibility
 {
-    [RequireComponent(typeof (Renderer))]
     public class VisibilityToPlayer : MonoBehaviour
     {
         public float MaxDistance;
 
-        private Renderer _renderer;
+        private Visibility[] _visibilities;
         private Transform _mainPlayer;
         private int _layerMask;
 
         public void Start()
         {
-            _renderer = GetComponent<Renderer>();
+            _visibilities = GetComponentsInChildren<Visibility>();
             _mainPlayer = GameObjectEx.FindGameObjectWithTag(GameObjectTags.Player).transform;
             var shadowLayer = Layers.GetLayer(LayerName.ShadowLayer);
             _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
@@ -25,13 +24,13 @@ namespace Assets.Scripts.Visibility
             var outside = (_mainPlayer.position - transform.position).magnitude > MaxDistance;
             if (outside)
             {
-                _renderer.enabled = false;
+                _visibilities.ForEach(v => v.IsVisible = false);
             }
             else
             {
                 var hits = Physics2D.Raycast(transform.position, _mainPlayer.position - transform.position, MaxDistance,
                     _layerMask);
-                _renderer.enabled = hits.collider == null || hits.collider.transform == _mainPlayer;
+                _visibilities.ForEach(v => v.IsVisible = hits.collider == null || hits.collider.transform == _mainPlayer);
             }
         }
     }
