@@ -14,6 +14,11 @@ namespace Assets.Scripts.Actors.Character
             {
                 _mousePressed = true;
             }
+
+            if (Input.GetMouseButtonDown(1))
+            {
+                this.GetPubSub().PublishMessageInContext(new FireMessage(isSecondary:true));
+            }
         }
 
         public void FixedUpdate()

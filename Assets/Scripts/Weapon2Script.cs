@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
@@ -17,40 +18,46 @@ public class Weapon2Script : MonoBehaviour
     public int RotationAdjustment = -90;
 
     private Animator _animator;
-    private readonly List<int> _alreadyHitTargets = new List<int>();
+    public List<int> AlreadyHitTargets { get; private set; }
 
-    private WeaponStateMachine _weaponStateMachine;
+    //private WeaponStateMachine _weaponStateMachine;
+    private bool _canFire = true;
 
     void Start()
     {
         _animator = GetComponent<Animator>();
-        _weaponStateMachine = new WeaponStateMachine(WeaponCooldown, WeaponHitTime);
-    }
-
-    void Update()
-    {
-        if (Input.GetMouseButtonDown(1))
+        //_weaponStateMachine = new WeaponStateMachine(WeaponCooldown, WeaponHitTime);
+        AlreadyHitTargets = new List<int>();
+        this.GetPubSub().SubscribeInContext<FireMessage>(m =>
         {
-            // Hit started
-            if (_weaponStateMachine.TryFire())
-            {
-                _alreadyHitTargets.Clear();
-                _animator.SetBool("IsSwinging", true);
-                this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment), ForcedSpeed, ForcedForwardTime, ForcedStopTime));
-            }
-        }
-
-        _animator.SetBool("IsSwinging", _weaponStateMachine.GetState() == WeaponState.Firing);
+            if (((FireMessage)m).IsSecondary) Fire();
+        });
     }
 
-    void OnTriggerEnter2D(Collider2D other)
+    private void Fire()
     {
-        // prevent multihits of same target
-        // Debug.LogFormat("Collided with {0}", other.GetInstanceID());
-        if (_alreadyHitTargets.Contains(other.GetInstanceID())) return;
-        _alreadyHitTargets.Add(other.GetInstanceID());
+        // Hit started
+        if (_canFire)
+        {
+            StartCoroutine(Swing());
+        }
+    }
 
-        other.GetPubSub().PublishMessageInContext(new TakeDamageMessage(WeaponDamage));
+    private IEnumerator Swing()
+    {
+        _canFire = false;
+        AlreadyHitTargets.Clear();
+        _animator.SetBool("IsSwinging", true);
+        this.GetPubSub()
+            .PublishMessageInContext(
+                new ForceMovementMessage(
+                    Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment), ForcedSpeed,
+                    ForcedForwardTime, ForcedStopTime));
+
+        yield return new WaitForSeconds(WeaponHitTime);
+        _animator.SetBool("IsSwinging", false);
+        yield return new WaitForSeconds(WeaponCooldown);
+        _canFire = true;
     }
 }
 

@@ -42,7 +42,7 @@ namespace Assets.Scripts.Misc
             }
         }
 
-        public bool IsContextAware = false;
+        public bool IsRoot = false;
         
         /// <summary>
         /// Publishes message only in current game object scope.
@@ -77,7 +77,7 @@ namespace Assets.Scripts.Misc
         }
 
         /// <summary>
-        /// Publishes message up the game object tree until it finds game object with IsContextAware = true
+        /// Publishes message up the game object tree until it finds game object with IsRoot = true
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <param name="message"></param>
@@ -94,13 +94,13 @@ namespace Assets.Scripts.Misc
         {
             var context = gameObject.GetComponent<PubSub>();
             var go = gameObject;
-            while ((context == null || !context.IsContextAware) && go.transform.parent != null)
+            while ((context == null || !context.IsRoot) && go.transform.parent != null)
             {
                 go = go.transform.parent.gameObject;
                 context = go.GetComponent<PubSub>();
             }
 
-            if (context == null || !context.IsContextAware) return null;
+            if (context == null || !context.IsRoot) return null;
             return context;
         }
 

@@ -2,11 +2,11 @@
 
 namespace Assets.Scripts.Misc
 {
-    public class ContextPubSub : MonoBehaviour
+    public class RootPubSub : MonoBehaviour
     {
         public void Awake()
         {
-            gameObject.GetPubSub().IsContextAware = true;
+            gameObject.GetPubSub().IsRoot = true;
         }
     }
 }

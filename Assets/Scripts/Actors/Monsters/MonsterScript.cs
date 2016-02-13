@@ -24,7 +24,20 @@ public class MonsterScript : MonoBehaviour
 	{
 	    StartCoroutine(ChangeDirection());
         StartCoroutine(StartShooting());
-	}
+        StartCoroutine(StartSwinging());
+    }
+
+    private IEnumerator StartSwinging()
+    {
+        yield return new WaitForSeconds(3);
+
+        while (true)
+        {
+            this.GetPubSub().PublishMessageInContext(new FireMessage(true));
+            yield return new WaitForSeconds(Random.Range(3, 7));
+        }
+
+    }
 
     private IEnumerator StartShooting()
     {

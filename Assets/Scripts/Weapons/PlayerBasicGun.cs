@@ -17,7 +17,10 @@ namespace Assets.Scripts.Weapons
         {
             _weaponStateMachine = new WeaponStateMachine(WeaponCooldown, 0);
             _dynamicGameObjects = GameObjectEx.Find(GameObjectNames.DynamicObjects);
-            this.GetPubSub().SubscribeInContext<FireMessage>(m => Fire());
+            this.GetPubSub().SubscribeInContext<FireMessage>(m =>
+            {
+                if (!((FireMessage) m).IsSecondary) Fire();
+            });
         }
 
         public void Fire()

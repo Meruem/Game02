@@ -15,8 +15,8 @@ namespace Assets.Scripts
         public int MapHeight;
         public int MonsterCount = 30;
 
-        public int VisibilityRadius = 9;
-        public int MaxRadius = 12;
+        //public int VisibilityRadius = 9;
+        //public int MaxRadius = 12;
 
         public Transform WallTile;
         public Transform GroudTile;
