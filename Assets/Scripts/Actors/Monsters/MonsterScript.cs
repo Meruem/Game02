@@ -22,9 +22,15 @@ public class MonsterScript : MonoBehaviour
     
     public void Start ()
 	{
+        this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
 	    StartCoroutine(ChangeDirection());
-        StartCoroutine(StartShooting());
+        //StartCoroutine(StartShooting());
         StartCoroutine(StartSwinging());
+    }
+
+    private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
+    {
+        this.GetPubSub().PublishMessageInContext(new TakeDamageMessage(weaponHitMessage.Damage));
     }
 
     private IEnumerator StartSwinging()

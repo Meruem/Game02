@@ -14,7 +14,7 @@ namespace Assets.Scripts.Weapons
             // Debug.LogFormat("Collided with {0}", other.GetInstanceID());
             if (WeaponStats.AlreadyHitTargets.Contains(other.GetInstanceID())) return;
             WeaponStats.AlreadyHitTargets.Add(other.GetInstanceID());
-            other.GetPubSub().PublishMessageInContext(new TakeDamageMessage(WeaponStats.WeaponDamage));
+            other.GetPubSub().PublishBubbleMessage(new WeaponHitMessage(WeaponStats.WeaponDamage, gameObject), true);
         }
     }
 }

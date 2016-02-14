@@ -25,6 +25,7 @@ namespace Assets.Scripts
 
         private void ForceMove(ForceMovementMessage forceMovementMessage)
         {
+            if (forceMovementMessage.AllowOtherMovement) return;
             StartCoroutine(ForceMoveCoroutine(forceMovementMessage));
         }
 
@@ -34,7 +35,6 @@ namespace Assets.Scripts
             Move(message.Direction, message.Speed);
             yield return new WaitForSeconds(message.ForwardTime);
             Move(Vector2.zero, 0);
-            yield return new WaitForSeconds(message.StopTime);
             _isInForcedMovement = false;
         }
 

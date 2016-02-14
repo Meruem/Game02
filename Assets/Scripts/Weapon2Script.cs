@@ -1,37 +1,54 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using UnityEngine;
 
+[Serializable]
+public class ForcedMove
+{
+    public float Time;
+    public float Speed;
+    public bool AllowOtherMovement = false; //Only provides delay in state machine execution
+}
+
 [RequireComponent(typeof(Animator))]
 public class Weapon2Script : MonoBehaviour
 {
     public int WeaponDamage = 2;
-    public float WeaponCooldown = 1; // From moment weapon is fired
-    public float WeaponHitTime = 0.5f; // Max -> animation can end before
-    public float ForcedForwardTime = 0.3f;
-    public float ForcedSpeed = 3;
-    public float ForcedStopTime = 0.2f;
+
+    public List<ForcedMove> ReadyMoves;
+    public List<ForcedMove> SwingMoves;
+    public List<ForcedMove> RecoverMoves;
+
     public int RotationAdjustment = -90;
-    public float ReadyTime = 0.05f;
 
     public List<int> AlreadyHitTargets { get; private set; }
 
-    //private WeaponStateMachine _weaponStateMachine;
     private bool _canFire = true;
+    private bool _isBlocked;
     private Animator _animator;
 
     void Start()
     {
         _animator = GetComponent<Animator>();
-        //_weaponStateMachine = new WeaponStateMachine(WeaponCooldown, WeaponHitTime);
         AlreadyHitTargets = new List<int>();
         this.GetPubSub().SubscribeInContext<FireMessage>(m =>
         {
             if (((FireMessage)m).IsSecondary) Fire();
         });
+
+        this.GetPubSub().SubscribeInContext<ShieldHitMessage>(m => ShieldHit());
+    }
+
+    private void ShieldHit()
+    {
+        _isBlocked = true;
+        _animator.SetBool("IsSwinging", false);
+        _animator.SetBool("IsBlocked", true);
+        this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(Vector2.zero, 0, 0, false));
     }
 
     private void Fire()
@@ -46,21 +63,49 @@ public class Weapon2Script : MonoBehaviour
     private IEnumerator Swing()
     {
         _canFire = false;
+        _isBlocked = false;
+        _animator.SetBool("IsBlocked", false);
         AlreadyHitTargets.Clear();
-        _animator.SetBool("IsRedying", true);
-        yield return new WaitForSeconds(ReadyTime);
-        _animator.SetBool("IsRedying", false);
-        _animator.SetBool("IsSwinging", true);
-        this.GetPubSub()
-            .PublishMessageInContext(
-                new ForceMovementMessage(
-                    Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment), ForcedSpeed,
-                    ForcedForwardTime, ForcedStopTime));
+        var direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment);
 
-        yield return new WaitForSeconds(WeaponHitTime);
+        // ready phase
+        _animator.SetBool("IsRedying", true);
+        if (ReadyMoves != null)
+        {
+            for (var i = 0; i < ReadyMoves.Count; i++)
+            {
+                var move = ReadyMoves[i];
+                this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
+                yield return new WaitForSeconds(move.Time);
+            }
+        }
+        _animator.SetBool("IsRedying", false);
+
+        // swing phase
+        _animator.SetBool("IsSwinging", true);
+        if (SwingMoves != null)
+        {
+            for (var i = 0; i < SwingMoves.Count; i++)
+            {
+                if (_isBlocked) break;
+                var move = SwingMoves[i];
+                this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
+                yield return new WaitForSeconds(move.Time);
+            }
+        }
         _animator.SetBool("IsSwinging", false);
+
+        //recover phase
         _animator.SetBool("IsRecovering", true);
-        yield return new WaitForSeconds(WeaponCooldown);
+        if (RecoverMoves != null)
+        {
+            for (var i = 0; i < RecoverMoves.Count; i++)
+            {
+                var move = RecoverMoves[i];
+                this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
+                yield return new WaitForSeconds(move.Time);
+            }
+        }
         _animator.SetBool("IsRecovering", false);
         _canFire = true;
     }

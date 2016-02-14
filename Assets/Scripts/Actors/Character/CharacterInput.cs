@@ -7,6 +7,7 @@ namespace Assets.Scripts.Actors.Character
     public class CharacterInput : MonoBehaviour
     {
         private bool _mousePressed;
+        private bool _previousShiftKey;
 
         public void Update()
         {
@@ -18,6 +19,13 @@ namespace Assets.Scripts.Actors.Character
             if (Input.GetMouseButtonDown(1))
             {
                 this.GetPubSub().PublishMessageInContext(new FireMessage(isSecondary:true));
+            }
+
+            bool newShiftKey = Input.GetKey(KeyCode.LeftShift);
+            if (_previousShiftKey != newShiftKey)
+            {
+                _previousShiftKey = newShiftKey;
+                this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(newShiftKey));
             }
         }
 

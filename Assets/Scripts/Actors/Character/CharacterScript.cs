@@ -1,17 +1,16 @@
-﻿using Assets.Scripts;
-using Assets.Scripts.Messages;
+﻿using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
-using Assets.Scripts.Weapons;
 using UnityEngine;
 
 public class CharacterScript : MonoBehaviour
 {
-    public PlayerBasicGun Gun;
-
-    public Transform WeaponArc;
-
-    void Start()
+    public void Start()
     {
-        //this.GetPubSub().SubscribeInContext<FireMessage>(m => Fire());
+        this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
+    }
+
+    private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
+    {
+        this.GetPubSub().PublishMessageInContext(new TakeDamageMessage(weaponHitMessage.Damage));
     }
 }

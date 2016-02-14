@@ -18,13 +18,16 @@ namespace Assets.Scripts
 
         private void OnForcedMovement(ForceMovementMessage message)
         {
-            StartCoroutine(OnForcedMovementCourutine(message));
+            if (!message.AllowOtherMovement)
+            {
+                StartCoroutine(RestrictMovement(message));
+            }
         }
 
-        private IEnumerator OnForcedMovementCourutine(ForceMovementMessage message)
+        private IEnumerator RestrictMovement(ForceMovementMessage message)
         {
             _isInForcedMovement = true;
-            yield return new WaitForSeconds(message.ForwardTime + message.StopTime);
+            yield return new WaitForSeconds(message.ForwardTime);
             _isInForcedMovement = false;
         }
 

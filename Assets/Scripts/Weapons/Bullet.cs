@@ -11,7 +11,7 @@ namespace Assets.Scripts
 
         void OnCollisionEnter2D(Collision2D coll)
         {
-            coll.gameObject.GetPubSub().PublishMessageInContext(new TakeDamageMessage(Damage));
+            coll.collider.gameObject.GetPubSub().PublishBubbleMessage(new WeaponHitMessage(Damage, gameObject), true);
             Destroy(gameObject);
         }
     }

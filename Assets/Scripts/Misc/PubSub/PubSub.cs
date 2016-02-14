@@ -49,7 +49,7 @@ namespace Assets.Scripts.Misc
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <param name="message"></param>
-        public void PublishMessage<TMessage>(TMessage message)
+        public bool PublishMessage<TMessage>(TMessage message)
             where TMessage : IMessage
         {
             if (PubSubSettings.DebugAllMessages)
@@ -66,14 +66,18 @@ namespace Assets.Scripts.Misc
                     {
                         Debug.LogFormat("No subscriber was found for message of type {0}.", message);
                     }
-                    return;
+                    return false;
                 }
 
                 for (var i = 0; i < list.Count; i++)
                 {
                     list[i](message);
                 }
+
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -84,13 +88,40 @@ namespace Assets.Scripts.Misc
         public void PublishMessageInContext<TMessage>(TMessage message)
             where TMessage : IMessage
         {
-            var context = FindContextAwareObject();
+            var context = gameObject.GetComponent<PubSub>();
+            var go = gameObject;
+            while ((context == null || !context.IsRoot) && go.transform.parent != null)
+            {
+                go = go.transform.parent.gameObject;
+                context = go.GetComponent<PubSub>();
+            }
             if (context == null) return;
 
             context.PublishMessage(message);
         }
 
-        private PubSub FindContextAwareObject()
+        public void PublishBubbleMessage<TMessage>(TMessage message, bool stopWhenHandled)
+            where TMessage : IMessage
+        {
+            var context = gameObject.GetComponent<PubSub>();
+            var go = gameObject;
+            while ((context == null || !context.IsRoot) && go.transform.parent != null)
+            {
+                if (context != null)
+                {
+                    var handled = context.PublishMessage(message);
+                    if (stopWhenHandled && handled) return;
+                }
+
+                go = go.transform.parent.gameObject;
+                context = go.GetComponent<PubSub>();
+            }
+            if (context == null) return;
+
+            context.PublishMessage(message);
+        }
+
+        private PubSub FindRootContext()
         {
             var context = gameObject.GetComponent<PubSub>();
             var go = gameObject;
@@ -137,7 +168,7 @@ namespace Assets.Scripts.Misc
         public void SubscribeInContext<TMessage>(Action<IMessage> action)
             where TMessage : IMessage
         {
-            var context = FindContextAwareObject();
+            var context = FindRootContext();
             if (context == null) return;
 
             context.Subscribe<TMessage>(action);

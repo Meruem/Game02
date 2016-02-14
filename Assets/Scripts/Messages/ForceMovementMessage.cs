@@ -7,14 +7,14 @@ namespace Assets.Scripts.Messages
         public Vector2 Direction { get; private set; }
         public float Speed { get; private set; }
         public float ForwardTime { get; set; }
-        public float StopTime { get; private set; }
+        public bool AllowOtherMovement { get; private set; }
 
-        public ForceMovementMessage(Vector2 direction, float speed, float forwardTime, float stopTime)
+        public ForceMovementMessage(Vector2 direction, float speed, float forwardTime, bool allowOtherMovement)
         {
             Direction = direction;
             Speed = speed;
             ForwardTime = forwardTime;
-            StopTime = stopTime;
+            AllowOtherMovement = allowOtherMovement;
         }
     }
 }
