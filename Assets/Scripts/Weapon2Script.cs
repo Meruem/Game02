@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
-using Assets.Scripts.Weapons;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
@@ -17,12 +15,13 @@ public class Weapon2Script : MonoBehaviour
     public float ForcedSpeed = 3;
     public float ForcedStopTime = 0.2f;
     public int RotationAdjustment = -90;
+    public float ReadyTime = 0.05f;
 
-    private Animator _animator;
     public List<int> AlreadyHitTargets { get; private set; }
 
     //private WeaponStateMachine _weaponStateMachine;
     private bool _canFire = true;
+    private Animator _animator;
 
     void Start()
     {
@@ -48,6 +47,9 @@ public class Weapon2Script : MonoBehaviour
     {
         _canFire = false;
         AlreadyHitTargets.Clear();
+        _animator.SetBool("IsRedying", true);
+        yield return new WaitForSeconds(ReadyTime);
+        _animator.SetBool("IsRedying", false);
         _animator.SetBool("IsSwinging", true);
         this.GetPubSub()
             .PublishMessageInContext(
@@ -57,7 +59,9 @@ public class Weapon2Script : MonoBehaviour
 
         yield return new WaitForSeconds(WeaponHitTime);
         _animator.SetBool("IsSwinging", false);
-        yield return new WaitForSeconds(Math.Max(WeaponCooldown - WeaponHitTime, 0));
+        _animator.SetBool("IsRecovering", true);
+        yield return new WaitForSeconds(WeaponCooldown);
+        _animator.SetBool("IsRecovering", false);
         _canFire = true;
     }
 }
