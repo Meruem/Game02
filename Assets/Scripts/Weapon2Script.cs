@@ -40,7 +40,7 @@ public class Weapon2Script : MonoBehaviour
             if (((FireMessage)m).IsSecondary) Fire();
         });
 
-        this.GetPubSub().SubscribeInContext<ShieldHitMessage>(m => ShieldHit());
+        this.GetPubSub().SubscribeInContext<WeaponBlockedMessage>(m => ShieldHit());
     }
 
     private void ShieldHit()
@@ -108,6 +108,8 @@ public class Weapon2Script : MonoBehaviour
         }
         _animator.SetBool("IsRecovering", false);
         _canFire = true;
+
+        this.GetPubSub().PublishMessageInContext(new AttackEndedMessage());
     }
 }
 

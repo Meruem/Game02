@@ -21,17 +21,9 @@ namespace Assets.Scripts.Visibility
 
         public void Update()
         {
-            var outside = (_mainPlayer.position - transform.position).magnitude > MaxDistance;
-            if (outside)
-            {
-                _visibilities.ForEach(v => v.IsVisible = false);
-            }
-            else
-            {
-                var hits = Physics2D.Raycast(transform.position, _mainPlayer.position - transform.position, MaxDistance,
-                    _layerMask);
-                _visibilities.ForEach(v => v.IsVisible = hits.collider == null || hits.collider.transform == _mainPlayer);
-            }
+            var isVisible = VisibilityHelper.CheckVisibility(transform, _mainPlayer.transform, MaxDistance, _layerMask);
+
+            _visibilities.ForEach(v => v.IsVisible = isVisible);
         }
     }
 }

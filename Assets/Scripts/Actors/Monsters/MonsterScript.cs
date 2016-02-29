@@ -3,46 +3,42 @@ using System.Collections;
 using Assets.Scripts;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
+using Assets.Scripts.Visibility;
 using Assets.Scripts.Weapons;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-[RequireComponent(typeof(MoveScript))]
 public class MonsterScript : MonoBehaviour 
 {
     public BulletPrototype BulletPrototype;
+    public float MaxVisibleDistance = 4;
+    public float AttackDistance = 0.6f;
+    public float TooCloseDistance = 0.3f;
 
     private float _direction;
     private GameObject _dynamicGameObjects;
+    private GameObject _playerGameObject;
+    private int _layerMask;
 
     public void Awake()
     {
         _dynamicGameObjects = GameObjectEx.Find(GameObjectNames.DynamicObjects);
+        _playerGameObject = GameObjectEx.FindGameObjectWithTag(GameObjectTags.Player);
+
+        var shadowLayer = Layers.GetLayer(LayerName.ShadowLayer);
+        _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
     }
     
     public void Start ()
 	{
         this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
-	    StartCoroutine(ChangeDirection());
+	    StartCoroutine(WanderAround());
         //StartCoroutine(StartShooting());
-        StartCoroutine(StartSwinging());
     }
 
     private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
     {
         this.GetPubSub().PublishMessageInContext(new TakeDamageMessage(weaponHitMessage.Damage));
-    }
-
-    private IEnumerator StartSwinging()
-    {
-        yield return new WaitForSeconds(Random.Range(1, 3));
-
-        while (true)
-        {
-            this.GetPubSub().PublishMessageInContext(new FireMessage(true));
-            yield return new WaitForSeconds(Random.Range(3, 7));
-        }
-
     }
 
     private IEnumerator StartShooting()
@@ -63,15 +59,41 @@ public class MonsterScript : MonoBehaviour
         }
     }
 
-    IEnumerator ChangeDirection()
+    IEnumerator WanderAround()
     {
         while (true)
         {
-            float angle = Random.Range(0, 16)*(float) Math.PI*2f/16;
-            _direction = angle;
-            var vector = Math2.AngleRadToVector(_direction);
-            this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
-            yield return new WaitForSeconds(Random.Range(1, 4));
+            if (VisibilityHelper.CheckVisibility(transform, _playerGameObject.transform, MaxVisibleDistance, _layerMask))
+            {
+                var distance = (transform.position - _playerGameObject.transform.position).magnitude;
+                if (distance < TooCloseDistance)
+                {
+                    var vector = -_playerGameObject.transform.position + transform.position;
+                    this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+                }
+                else if (distance <= AttackDistance)
+                {
+                    var vector = _playerGameObject.transform.position - transform.position;
+                    this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector, false, 0.1f));
+                    this.GetPubSub().PublishMessageInContext(new FireMessage(true));
+                }
+                else
+                {
+                    var vector = _playerGameObject.transform.position - transform.position;
+                    this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+                }
+                yield return null;
+            }
+            else
+            {
+                float angle = Random.Range(0, 16) * (float)Math.PI * 2f / 16;
+                _direction = angle;
+                var vector = Math2.AngleRadToVector(_direction);
+                this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+
+                yield return new WaitForSeconds(Random.Range(1, 3));
+
+            }
         }
     }
 }

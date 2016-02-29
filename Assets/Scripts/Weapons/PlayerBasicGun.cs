@@ -26,9 +26,10 @@ namespace Assets.Scripts.Weapons
         public void Fire()
         {
             Fire(transform.position, transform.rotation.eulerAngles.z);
+            this.GetPubSub().PublishMessageInContext(new AttackEndedMessage());
         }
 
-        public void Fire(Vector2 position, float degAngle)
+        private void Fire(Vector2 position, float degAngle)
         {
             if (AmmoContainer == null)
             {

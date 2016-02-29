@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Messages;
+using Assets.Scripts.Messages.Input;
 using Assets.Scripts.Misc;
 using UnityEngine;
 
@@ -18,14 +19,14 @@ namespace Assets.Scripts.Actors.Character
 
             if (Input.GetMouseButtonDown(1))
             {
-                this.GetPubSub().PublishMessageInContext(new FireMessage(isSecondary:true));
+                this.GetPubSub().PublishMessageInContext(new FireInputMessage(isSecondary:true));
             }
 
             bool newShiftKey = Input.GetKey(KeyCode.LeftShift);
             if (_previousShiftKey != newShiftKey)
             {
                 _previousShiftKey = newShiftKey;
-                this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(newShiftKey));
+                this.GetPubSub().PublishMessageInContext(new ShieldInputMessage(newShiftKey));
             }
         }
 
@@ -38,11 +39,11 @@ namespace Assets.Scripts.Actors.Character
 
             if (_mousePressed)
             {
-                this.GetPubSub().PublishMessageInContext(new FireMessage());
+                this.GetPubSub().PublishMessageInContext(new FireInputMessage());
                 _mousePressed = false;
             }
 
-            this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(movement.normalized));
+            this.GetPubSub().PublishMessageInContext(new MoveInputMessage(movement.normalized));
         }
     }
 }

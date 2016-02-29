@@ -24,7 +24,8 @@ namespace Assets.Scripts.Weapons
         private void HandleTakeDamage(WeaponHitMessage message)
         {
             Debug.LogFormat("Shield hit");
-            message.Weapon.GetPubSub().PublishMessageInContext(new ShieldHitMessage());
+            message.Weapon.GetPubSub().PublishMessageInContext(new WeaponBlockedMessage()); // notify weapon object
+            this.GetPubSub().PublishMessageInContext(new ShieldHitMessage(message.Weapon)); // notify parent object
         }
 
         private void HandleShieldChange(ShieldChangeMessage shieldChangeMessage)

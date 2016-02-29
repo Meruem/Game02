@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
+    /// <summary>
+    /// Listens for MoveInDirection and ForceMovement messages and moves attached rigid body accordingly.
+    /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     public class MoveScript : MonoBehaviour
     {
@@ -19,7 +22,7 @@ namespace Assets.Scripts
         {
             _animator = GetComponentInChildren<Animator>();
             _cachedRigidBody2D = GetComponent<Rigidbody2D>();
-            this.GetPubSub().SubscribeInContext<MoveInDirectionMessage>(m => Move(((MoveInDirectionMessage)m).Direction));
+            this.GetPubSub().SubscribeInContext<MoveInDirectionMessage>(m => MoveNormal((MoveInDirectionMessage)m));
             this.GetPubSub().SubscribeInContext<ForceMovementMessage>(m => ForceMove((ForceMovementMessage)m));
         }
 
@@ -38,13 +41,13 @@ namespace Assets.Scripts
             _isInForcedMovement = false;
         }
 
-        public void Move(Vector2 movement)
+        private void MoveNormal(MoveInDirectionMessage message)
         {
             if (_isInForcedMovement) return;
-            Move(movement, MaxSpeed);
+            Move(message.Direction, message.UseMaxSpeed ? MaxSpeed : message.Speed);
         }
 
-        public void Move(Vector2 movement, float speed)
+        private void Move(Vector2 movement, float speed)
         {
             if (_cachedRigidBody2D == null) return;
 
