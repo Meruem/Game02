@@ -8,7 +8,8 @@ using Assets.Scripts.Weapons;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class MonsterScript : MonoBehaviour 
+[RequireComponent(typeof(IMoveScript))]
+public class MonsterController : MonoBehaviour 
 {
     public BulletPrototype BulletPrototype;
     public float MaxVisibleDistance = 4;
@@ -20,6 +21,8 @@ public class MonsterScript : MonoBehaviour
     private GameObject _playerGameObject;
     private int _layerMask;
 
+    private IMoveScript _moveScript;
+
     public void Awake()
     {
         _dynamicGameObjects = GameObjectEx.Find(GameObjectNames.DynamicObjects);
@@ -27,6 +30,7 @@ public class MonsterScript : MonoBehaviour
 
         var shadowLayer = Layers.GetLayer(LayerName.ShadowLayer);
         _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
+        _moveScript = GetComponent<IMoveScript>();
     }
     
     public void Start ()
@@ -61,12 +65,12 @@ public class MonsterScript : MonoBehaviour
     
     private void Move(Vector2 vector)
     {
-    	this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+        _moveScript.MoveMaxSpeed(vector);
     }
     
     private void Move(Vector2 vector, float speed)
     {
-    	this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector, false, speed));
+        _moveScript.MoveNormal(vector, speed);
     }
     
     private void Attack()
@@ -90,7 +94,7 @@ public class MonsterScript : MonoBehaviour
                 {
                     var vector = _playerGameObject.transform.position - transform.position;
                     Move(vector, 0.1f); // in order to have correct position to player make small step
-                    Fire();
+                    Attack();
                 }
                 else
                 {

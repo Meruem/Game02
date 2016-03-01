@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Weapons
 {
-    public class PlayerBasicGun : MonoBehaviour
+    public class PlayerBasicGun : MonoBehaviour, IWeapon
     {
         public AmmoContainer AmmoContainer; 
         public float WeaponCooldown;    // forwardTime until next shot is ready
@@ -12,9 +12,11 @@ namespace Assets.Scripts.Weapons
 
         private WeaponStateMachine _weaponStateMachine;
         private GameObject _dynamicGameObjects;
+        private int _id;
 
         public void Awake()
         {
+            _id = gameObject.GetInstanceID();
             _weaponStateMachine = new WeaponStateMachine(WeaponCooldown, 0);
             _dynamicGameObjects = GameObjectEx.Find(GameObjectNames.DynamicObjects);
             this.GetPubSub().SubscribeInContext<FireMessage>(m =>
@@ -27,6 +29,11 @@ namespace Assets.Scripts.Weapons
         {
             Fire(transform.position, transform.rotation.eulerAngles.z);
             this.GetPubSub().PublishMessageInContext(new AttackEndedMessage());
+        }
+
+        public int Id
+        {
+            get { return _id; }
         }
 
         private void Fire(Vector2 position, float degAngle)

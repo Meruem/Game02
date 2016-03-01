@@ -9,7 +9,7 @@ namespace Assets.Scripts
     /// Listens for MoveInDirection and ForceMovement messages and moves attached rigid body accordingly.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
-    public class MoveScript : MonoBehaviour
+    public class MoveScript : MonoBehaviour, IMoveScript
     {
         public float MaxSpeed = 5.0f;
         
@@ -22,29 +22,33 @@ namespace Assets.Scripts
         {
             _animator = GetComponentInChildren<Animator>();
             _cachedRigidBody2D = GetComponent<Rigidbody2D>();
-            this.GetPubSub().SubscribeInContext<MoveInDirectionMessage>(m => MoveNormal((MoveInDirectionMessage)m));
             this.GetPubSub().SubscribeInContext<ForceMovementMessage>(m => ForceMove((ForceMovementMessage)m));
+        }
+
+        public void MoveNormal(Vector2 direction, float speed)
+        {
+            if (_isInForcedMovement) return;
+            Move(direction, speed);
+        }
+
+        public void MoveMaxSpeed(Vector2 direction)
+        {
+            MoveNormal(direction, MaxSpeed);
         }
 
         private void ForceMove(ForceMovementMessage forceMovementMessage)
         {
             if (forceMovementMessage.AllowOtherMovement) return;
-            StartCoroutine(ForceMoveCoroutine(forceMovementMessage));
+            StartCoroutine(ForceMoveCoroutine(forceMovementMessage.Direction, forceMovementMessage.Speed, forceMovementMessage.ForwardTime));
         }
 
-        private IEnumerator ForceMoveCoroutine(ForceMovementMessage message)
+        private IEnumerator ForceMoveCoroutine(Vector2 direction, float speed, float time)
         {
             _isInForcedMovement = true;
-            Move(message.Direction, message.Speed);
-            yield return new WaitForSeconds(message.ForwardTime);
+            Move(direction, speed);
+            yield return new WaitForSeconds(time);
             Move(Vector2.zero, 0);
             _isInForcedMovement = false;
-        }
-
-        private void MoveNormal(MoveInDirectionMessage message)
-        {
-            if (_isInForcedMovement) return;
-            Move(message.Direction, message.UseMaxSpeed ? MaxSpeed : message.Speed);
         }
 
         private void Move(Vector2 movement, float speed)

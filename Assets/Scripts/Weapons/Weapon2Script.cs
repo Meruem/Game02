@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Assets.Scripts;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
+using Assets.Scripts.Weapons;
 using UnityEngine;
 
 [Serializable]
@@ -15,7 +16,7 @@ public class ForcedMove
 }
 
 [RequireComponent(typeof(Animator))]
-public class Weapon2Script : MonoBehaviour
+public class Weapon2Script : MonoBehaviour, IWeapon
 {
     public int WeaponDamage = 2;
 
@@ -30,9 +31,11 @@ public class Weapon2Script : MonoBehaviour
     private bool _canFire = true;
     private bool _isBlocked;
     private Animator _animator;
+    private int _id;
 
     void Start()
     {
+        _id = gameObject.GetInstanceID();
         _animator = GetComponent<Animator>();
         AlreadyHitTargets = new List<int>();
         this.GetPubSub().SubscribeInContext<FireMessage>(m =>
@@ -43,21 +46,26 @@ public class Weapon2Script : MonoBehaviour
         this.GetPubSub().SubscribeInContext<WeaponBlockedMessage>(m => ShieldHit());
     }
 
-    private void ShieldHit()
+    public int Id
     {
-        _isBlocked = true;
-        _animator.SetBool("IsSwinging", false);
-        _animator.SetBool("IsBlocked", true);
-        this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(Vector2.zero, 0, 0, false));
+        get { return _id; }
     }
 
-    private void Fire()
+    public void Fire()
     {
         // Hit started
         if (_canFire)
         {
             StartCoroutine(Swing());
         }
+    }
+
+    private void ShieldHit()
+    {
+        _isBlocked = true;
+        _animator.SetBool("IsSwinging", false);
+        _animator.SetBool("IsBlocked", true);
+        this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(Vector2.zero, 0, 0, false));
     }
 
     private IEnumerator Swing()

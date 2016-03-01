@@ -1,13 +1,18 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Messages.Input;
 using Assets.Scripts.Misc;
+using Assets.Scripts.Weapons;
 using UnityEngine;
 
-public class CharacterScript : MonoBehaviour
+[RequireComponent(typeof(IMoveScript))]
+public class CharacterController : MonoBehaviour
 {
     public float CharacterSpeed = 5;
     public float CharacterShieldedSpeed = 3;
+
+    public WeaponManager WeaponManager;
 
     private bool _isShielded;
     private bool _isAttacking;
@@ -17,19 +22,21 @@ public class CharacterScript : MonoBehaviour
     private float _nextReset;
     private float _timeDeltaWait = 0.05f;
 
+    private IMoveScript _moveScript;
+
     public void Start()
     {
+        _moveScript = GetComponent<IMoveScript>();
+
         // Take damage when hit by weapon
         this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
 
+        // Input handlers
         this.GetPubSub().SubscribeInContext<MoveInputMessage>(m => HandleMoveInput((MoveInputMessage)m));
-
         this.GetPubSub().SubscribeInContext<FireInputMessage>(m => HandleFireInput((FireInputMessage)m));
-
         this.GetPubSub().SubscribeInContext<ShieldInputMessage>(m => HandleShieldInput((ShieldInputMessage)m));
 
         this.GetPubSub().SubscribeInContext<AttackEndedMessage>(m => HandleAttackEnded());
-
         this.GetPubSub().SubscribeInContext<ShieldHitMessage>(m => HandleShieldHitMessage((ShieldHitMessage)m));
     }
 
@@ -79,12 +86,20 @@ public class CharacterScript : MonoBehaviour
             this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(false));
         }
 
-        this.GetPubSub().PublishMessageInContext(new FireMessage(fireInputMessage.IsSecondary));
+        if (fireInputMessage.IsSecondary)
+        {
+            WeaponManager.FireSecondary();
+        }
+        else
+        {
+            WeaponManager.FirePrimary();
+        }
+        //this.GetPubSub().PublishMessageInContext(new FireMessage(fireInputMessage.IsSecondary));
     }
 
     private void HandleMoveInput(MoveInputMessage moveInputMessage)
     {
-        this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(moveInputMessage.Direction, false, _isShielded ? CharacterShieldedSpeed : CharacterSpeed));
+        _moveScript.MoveNormal(moveInputMessage.Direction, _isShielded ? CharacterShieldedSpeed : CharacterSpeed);
     }
 
     private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
