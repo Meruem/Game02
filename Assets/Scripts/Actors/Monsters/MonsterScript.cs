@@ -58,6 +58,21 @@ public class MonsterScript : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(1, 3));
         }
     }
+    
+    private void Move(Vector2 vector)
+    {
+    	this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+    }
+    
+    private void Move(Vector2 vector, float speed)
+    {
+    	this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector, false, speed));
+    }
+    
+    private void Attack()
+    {
+    	this.GetPubSub().PublishMessageInContext(new FireMessage(true));
+    }
 
     IEnumerator WanderAround()
     {
@@ -69,18 +84,18 @@ public class MonsterScript : MonoBehaviour
                 if (distance < TooCloseDistance)
                 {
                     var vector = -_playerGameObject.transform.position + transform.position;
-                    this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+                    Move(vector);
                 }
                 else if (distance <= AttackDistance)
                 {
                     var vector = _playerGameObject.transform.position - transform.position;
-                    this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector, false, 0.1f));
-                    this.GetPubSub().PublishMessageInContext(new FireMessage(true));
+                    Move(vector, 0.1f); // in order to have correct position to player make small step
+                    Fire();
                 }
                 else
                 {
                     var vector = _playerGameObject.transform.position - transform.position;
-                    this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+                    Move(vector);
                 }
                 yield return null;
             }
@@ -89,10 +104,9 @@ public class MonsterScript : MonoBehaviour
                 float angle = Random.Range(0, 16) * (float)Math.PI * 2f / 16;
                 _direction = angle;
                 var vector = Math2.AngleRadToVector(_direction);
-                this.GetPubSub().PublishMessageInContext(new MoveInDirectionMessage(vector));
+                Move(vector);
 
                 yield return new WaitForSeconds(Random.Range(1, 3));
-
             }
         }
     }
