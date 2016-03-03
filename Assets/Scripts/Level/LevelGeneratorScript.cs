@@ -117,12 +117,13 @@ namespace Assets.Scripts
         private void GenerateTiles(int mapWidth, int mapHeight, float tileWidth, float tileHeight)
         {
             var map = new MapGenerator(mapWidth, mapHeight);
-            _map = new TileMap(map.TileMap);
+            var level = map.GenerateMap();
+            _map = new TileMap(level);
             for (int i = 0; i < mapWidth; i++)
             {
                 for (int j = 0; j < mapHeight; j++)
                 {
-                    var tile = map.TileMap[i, j];
+                    var tile = level[i, j];
                     Transform newTransform = null;
 
                     switch (tile)
