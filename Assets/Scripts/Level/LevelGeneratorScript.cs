@@ -15,6 +15,9 @@ namespace Assets.Scripts
         public int MapHeight;
         public int MonsterCount = 30;
 
+        [Range(0, 0.9f)]
+        public float MinRoomRation = 0.6f;
+
         //public int VisibilityRadius = 9;
         //public int MaxRadius = 12;
 
@@ -116,7 +119,7 @@ namespace Assets.Scripts
 
         private void GenerateTiles(int mapWidth, int mapHeight, float tileWidth, float tileHeight)
         {
-            var map = new MapGenerator(mapWidth, mapHeight);
+            var map = new MapGenerator(mapWidth, mapHeight, MinRoomRation);
             var level = map.GenerateMap();
             _map = new TileMap(level);
             for (int i = 0; i < mapWidth; i++)

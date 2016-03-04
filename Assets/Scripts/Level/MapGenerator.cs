@@ -66,8 +66,8 @@ namespace Assets.Scripts
 
         private TileType[,] _tileMap;
         private readonly int _maxTriesToBuildNewRoom = 10;
-        private readonly int _maxAdditionalExitsCount = 500;
-        private readonly float _minFreeTileRatio = 0.8f;
+        private readonly int _maxAdditionalExitsCount = 100;
+        private readonly float _minFreeTileRatio;
 
         private readonly IList<Position> _directions = new List<Position>
         {
@@ -77,12 +77,13 @@ namespace Assets.Scripts
             new Position {X = -1, Y = 0},
         };
 
-        public MapGenerator(int width, int height)
+        public MapGenerator(int width, int height, float minFreeTileRatio)
         {
             if (width < 30 || height < 30) throw new ArgumentOutOfRangeException("width and height must be over 30");
 
             MapWidth = width;
             MapHeight = height;
+            _minFreeTileRatio = minFreeTileRatio;
         }
 
         public TileType[,] GenerateMap()

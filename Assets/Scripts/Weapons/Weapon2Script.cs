@@ -90,6 +90,7 @@ public class Weapon2Script : MonoBehaviour, IWeapon
         _animator.SetBool("IsRedying", false);
 
         // swing phase
+        direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); //recalculate
         _animator.SetBool("IsSwinging", true);
         if (SwingMoves != null)
         {
@@ -104,6 +105,7 @@ public class Weapon2Script : MonoBehaviour, IWeapon
         _animator.SetBool("IsSwinging", false);
 
         //recover phase
+        direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); // recaulculate
         _animator.SetBool("IsRecovering", true);
         if (RecoverMoves != null)
         {
