@@ -6,8 +6,9 @@ namespace Assets.Scripts
     class ToMoveDirectionRotation : MonoBehaviour
     {
         public float RotationAdjustment = -90;
-        private Rigidbody2D _cachedRigidBody2D;
+        public bool MoveBackwards = false;
 
+        private Rigidbody2D _cachedRigidBody2D;
 
         void Update()
         {
@@ -20,7 +21,7 @@ namespace Assets.Scripts
             if (speed > 0.0f)
             {
                 //rotate by angle around the z axis.
-                transform.rotation = Quaternion.AngleAxis(angle, new Vector3(0, 0, 1));
+                transform.rotation = Quaternion.AngleAxis(MoveBackwards ? angle - 180 : angle, new Vector3(0, 0, 1));
             }
         }
     }

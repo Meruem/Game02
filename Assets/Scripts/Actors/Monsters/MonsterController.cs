@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using Assets.Scripts;
+using Assets.Scripts.Actors.Movement;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using Assets.Scripts.Visibility;
@@ -22,11 +23,15 @@ public class MonsterController : MonoBehaviour
     private int _layerMask;
 
     private IMoveScript _moveScript;
+    private ToMoveDirectionRotation _toMoveDirectionRotation;
+    private ToTargetObjectRotation _toTargetObjectRotation;
 
     public void Awake()
     {
         _dynamicGameObjects = GameObjectEx.Find(GameObjectNames.DynamicObjects);
         _playerGameObject = GameObjectEx.FindGameObjectWithTag(GameObjectTags.Player);
+        _toMoveDirectionRotation = GetComponent<ToMoveDirectionRotation>();
+        _toTargetObjectRotation = GetComponent<ToTargetObjectRotation>();
 
         var shadowLayer = Layers.GetLayer(LayerName.ShadowLayer);
         _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
@@ -65,11 +70,28 @@ public class MonsterController : MonoBehaviour
     
     private void Move(Vector2 vector)
     {
+        if (_toMoveDirectionRotation != null)
+        {
+            _toMoveDirectionRotation.MoveBackwards = false;
+        }
         _moveScript.MoveMaxSpeed(vector);
     }
-    
+
+    private void MoveBackWards(Vector2 vector)
+    {
+        if (_toMoveDirectionRotation != null)
+        {
+            _toMoveDirectionRotation.MoveBackwards = true;
+        }
+        _moveScript.MoveMaxSpeed(vector);
+    }
+
     private void Move(Vector2 vector, float speed)
     {
+        if (_toMoveDirectionRotation != null)
+        {
+            _toMoveDirectionRotation.MoveBackwards = false;
+        }
         _moveScript.MoveNormal(vector, speed);
     }
     
@@ -84,16 +106,26 @@ public class MonsterController : MonoBehaviour
         {
             if (VisibilityHelper.CheckVisibility(transform, _playerGameObject.transform, MaxVisibleDistance, _layerMask))
             {
+                if (_toTargetObjectRotation != null)
+                {
+                    _toTargetObjectRotation.Target = _playerGameObject.transform;
+                    _toTargetObjectRotation.enabled = true;
+                }
+                if (_toMoveDirectionRotation != null)
+                {
+                    _toMoveDirectionRotation.enabled = false;
+                }
+
                 var distance = (transform.position - _playerGameObject.transform.position).magnitude;
                 if (distance < TooCloseDistance)
                 {
                     var vector = -_playerGameObject.transform.position + transform.position;
-                    Move(vector);
+                    MoveBackWards(vector);
                 }
                 else if (distance <= AttackDistance)
                 {
                     var vector = _playerGameObject.transform.position - transform.position;
-                    Move(vector, 0.1f); // in order to have correct position to player make small step
+                    //Move(vector, 0.1f); // in order to have correct position to player make small step
                     Attack();
                 }
                 else
@@ -105,6 +137,15 @@ public class MonsterController : MonoBehaviour
             }
             else
             {
+                if (_toTargetObjectRotation != null)
+                {
+                    _toTargetObjectRotation.enabled = false;
+                }
+                if (_toMoveDirectionRotation != null)
+                {
+                    _toMoveDirectionRotation.enabled = true;
+                }
+
                 float angle = Random.Range(0, 16) * (float)Math.PI * 2f / 16;
                 _direction = angle;
                 var vector = Math2.AngleRadToVector(_direction);
