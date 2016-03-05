@@ -2,6 +2,7 @@
 using System.Collections;
 using Assets.Scripts;
 using Assets.Scripts.Actors.Movement;
+using Assets.Scripts.Actors.Stats;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using Assets.Scripts.Visibility;
@@ -10,14 +11,14 @@ using UnityEngine;
 using Random = UnityEngine.Random;
 
 [RequireComponent(typeof(IMoveScript))]
-public class MonsterController : MonoBehaviour 
+public class MonsterController : MonoBehaviour
 {
+    public Stats Stats;
     public BulletPrototype BulletPrototype;
     public float MaxVisibleDistance = 4;
     public float AttackDistance = 0.6f;
     public float TooCloseDistance = 0.3f;
 
-    private float _direction;
     private GameObject _dynamicGameObjects;
     private GameObject _playerGameObject;
     private int _layerMask;
@@ -25,6 +26,8 @@ public class MonsterController : MonoBehaviour
     private IMoveScript _moveScript;
     private ToMoveDirectionRotation _toMoveDirectionRotation;
     private ToTargetObjectRotation _toTargetObjectRotation;
+
+    private bool _gunCooldown;
 
     public void Awake()
     {
@@ -37,37 +40,30 @@ public class MonsterController : MonoBehaviour
         _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
         _moveScript = GetComponent<IMoveScript>();
     }
-    
+
     public void Start ()
 	{
         this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
 	    StartCoroutine(WanderAround());
-        //StartCoroutine(StartShooting());
     }
 
     private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
     {
-        this.GetPubSub().PublishMessageInContext(new TakeDamageMessage(weaponHitMessage.Damage));
+        Stats.AddAmount(StatsEnum.Health, -weaponHitMessage.Damage);
     }
 
-    private IEnumerator StartShooting()
+    private void FireBullet(float angle)
     {
-        yield return new WaitForSeconds(Random.Range(1, 3));
-
-        while (true)
+        if (BulletPrototype.Prefab == null)
         {
-            if (BulletPrototype.Prefab == null)
-            {
-                Debug.LogWarning("Prototype is null.");
-            }
-            else
-            {
-                BulletObjectFactory.CreateBullet(transform.position, Random.Range(0, 16) * 360f / 16, BulletPrototype, Layers.GetLayer(LayerName.MonsterBullets), _dynamicGameObjects.transform);
-            }
-            yield return new WaitForSeconds(Random.Range(1, 3));
+            Debug.LogWarning("Prototype is null.");
+        }
+        else
+        {
+            BulletObjectFactory.CreateBullet(transform.position, angle, BulletPrototype, Layers.GetLayer(LayerName.MonsterBullets), _dynamicGameObjects.transform);
         }
     }
-    
+
     private void Move(Vector2 vector)
     {
         if (_toMoveDirectionRotation != null)
@@ -100,8 +96,16 @@ public class MonsterController : MonoBehaviour
     	this.GetPubSub().PublishMessageInContext(new FireMessage(true));
     }
 
+    IEnumerator WeaponCooldown(float time)
+    {
+        _gunCooldown = true;
+        yield return new WaitForSeconds(time);
+        _gunCooldown = false;
+    }
+
     IEnumerator WanderAround()
     {
+        yield return new WaitForSeconds(1);
         while (true)
         {
             if (VisibilityHelper.CheckVisibility(transform, _playerGameObject.transform, MaxVisibleDistance, _layerMask))
@@ -116,24 +120,35 @@ public class MonsterController : MonoBehaviour
                     _toMoveDirectionRotation.enabled = false;
                 }
 
-                var distance = (transform.position - _playerGameObject.transform.position).magnitude;
-                if (distance < TooCloseDistance)
+                if (Stats.HasEnaugh(StatsEnum.Bullets, 1) && !_gunCooldown)
                 {
-                    var vector = -_playerGameObject.transform.position + transform.position;
-                    MoveBackWards(vector);
-                }
-                else if (distance <= AttackDistance)
-                {
-                    var vector = _playerGameObject.transform.position - transform.position;
-                    //Move(vector, 0.1f); // in order to have correct position to player make small step
-                    Attack();
+                    var q = Quaternion.LookRotation(Vector3.forward,
+                        _playerGameObject.transform.position - transform.position);
+                    FireBullet(q.eulerAngles.z);
+                    Stats.AddAmount(StatsEnum.Bullets, -1);
+                    StartCoroutine(WeaponCooldown(2));
+
+                    yield return null;
                 }
                 else
                 {
-                    var vector = _playerGameObject.transform.position - transform.position;
-                    Move(vector);
+                    var distance = (transform.position - _playerGameObject.transform.position).magnitude;
+                    if (distance < TooCloseDistance)
+                    {
+                        var vector = -_playerGameObject.transform.position + transform.position;
+                        MoveBackWards(vector);
+                    }
+                    else if (distance <= AttackDistance)
+                    {
+                        Attack();
+                    }
+                    else
+                    {
+                        var vector = _playerGameObject.transform.position - transform.position;
+                        Move(vector);
+                    }
+                    yield return null;
                 }
-                yield return null;
             }
             else
             {
@@ -147,8 +162,7 @@ public class MonsterController : MonoBehaviour
                 }
 
                 float angle = Random.Range(0, 16) * (float)Math.PI * 2f / 16;
-                _direction = angle;
-                var vector = Math2.AngleRadToVector(_direction);
+                var vector = Math2.AngleRadToVector(angle);
                 Move(vector);
 
                 yield return new WaitForSeconds(Random.Range(1, 3));

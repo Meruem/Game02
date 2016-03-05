@@ -1,8 +1,9 @@
 ﻿namespace Assets.Scripts.Weapons
 {
-    public interface IWeapon
+    public interface IAttack
     {
         void Fire();
         int Id { get; }
+        int RequiredEnergy { get; }
     }
 }

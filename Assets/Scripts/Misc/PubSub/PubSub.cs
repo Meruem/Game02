@@ -7,7 +7,20 @@ namespace Assets.Scripts.Misc
 {
     public class PubSub : MonoBehaviour
     {
-        private readonly Dictionary<Type, List<Action<IMessage>>> _subscribers = new Dictionary<Type, List<Action<IMessage>>>();
+        private class SubscriberAction<T>
+            where T : IMessage
+        {
+            public Action<T> Action { get; private set; }
+            public Func<T, bool> Filter { get; private set; }
+
+            public SubscriberAction(Action<T> action, Func<T, bool> filter = null)
+            {
+                Action = action;
+                Filter = filter;
+            }
+        }
+
+        private readonly Dictionary<Type, List<SubscriberAction<IMessage>>> _subscribers = new Dictionary<Type, List<SubscriberAction<IMessage>>>();
 
         private static PubSub _globalPubSub;
         private static PubSubSettings _pubSubSettings;
@@ -57,7 +70,7 @@ namespace Assets.Scripts.Misc
                 Debug.LogFormat("[{0}] Published message: {1}", gameObject.GetInstanceID(), message);
             }
 
-            List<Action<IMessage>> list;
+            List<SubscriberAction<IMessage>> list;
             if (_subscribers.TryGetValue(typeof (TMessage), out list))
             {
                 if (list == null || list.Count == 0)
@@ -71,7 +84,11 @@ namespace Assets.Scripts.Misc
 
                 for (var i = 0; i < list.Count; i++)
                 {
-                    list[i](message);
+                    var filter = list[i].Filter;
+                    if (filter == null || filter(message))
+                    {
+                        list[i].Action(message);
+                    }
                 }
 
                 return true;
@@ -151,27 +168,28 @@ namespace Assets.Scripts.Misc
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <param name="action"></param>
-        public void Subscribe<TMessage>(Action<IMessage> action)
+        /// <param name="filter"></param>
+        public void Subscribe<TMessage>(Action<IMessage> action, Func<IMessage, bool> filter = null)
             where TMessage : IMessage
         {
-            List<Action<IMessage>> list;
+            List<SubscriberAction<IMessage>> list;
             var found = _subscribers.TryGetValue(typeof (TMessage), out list);
             if (!found)
             {
-                list = new List<Action<IMessage>>();
+                list = new List<SubscriberAction<IMessage>>();
                 _subscribers[typeof (TMessage)] = list; 
             }
 
-            list.Add(action);
+            list.Add(new SubscriberAction<IMessage>(action, filter));
         }
 
-        public void SubscribeInContext<TMessage>(Action<IMessage> action)
+        public void SubscribeInContext<TMessage>(Action<IMessage> action, Func<IMessage, bool> filter = null)
             where TMessage : IMessage
         {
             var context = FindRootContext();
             if (context == null) return;
 
-            context.Subscribe<TMessage>(action);
+            context.Subscribe<TMessage>(action, filter);
         }
 
         /// <summary>
@@ -179,10 +197,11 @@ namespace Assets.Scripts.Misc
         /// </summary>
         /// <typeparam name="TMessage"></typeparam>
         /// <param name="action"></param>
-        public void SubscribeGlobal<TMessage>(Action<IMessage> action)
+        /// <param name="filter"></param>
+        public void SubscribeGlobal<TMessage>(Action<IMessage> action, Func<IMessage, bool> filter = null)
             where TMessage : IMessage
         {
-            GlobalPubSub.Subscribe<TMessage>(action);
+            GlobalPubSub.Subscribe<TMessage>(action, filter);
         }
     }
 }

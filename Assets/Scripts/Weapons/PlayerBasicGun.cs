@@ -1,14 +1,16 @@
-﻿using Assets.Scripts.Messages;
+﻿using Assets.Scripts.Actors.Stats;
+using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using UnityEngine;
 
 namespace Assets.Scripts.Weapons
 {
-    public class PlayerBasicGun : MonoBehaviour, IWeapon
+    public class PlayerBasicGun : MonoBehaviour, IAttack
     {
-        public AmmoContainer AmmoContainer; 
+        public Stats Stats; 
         public float WeaponCooldown;    // forwardTime until next shot is ready
         public BulletPrototype BulletPrototype;
+        public int EnergyRequired = 10;
 
         private WeaponStateMachine _weaponStateMachine;
         private GameObject _dynamicGameObjects;
@@ -36,17 +38,22 @@ namespace Assets.Scripts.Weapons
             get { return _id; }
         }
 
+        public int RequiredEnergy
+        {
+            get { return EnergyRequired; }
+        }
+
         private void Fire(Vector2 position, float degAngle)
         {
-            if (AmmoContainer == null)
+            if (Stats == null)
             {
-                Debug.LogWarning("Ammo container not found for this gun!");
+                Debug.LogWarning("No attached 'stats' object not found for this gun!");
             }
-            else if (AmmoContainer.HasEnaughAmmo(AmmoType.Bullets, 1))
+            else if (Stats.HasEnaugh(StatsEnum.Bullets, 1))
             {
                 if (!_weaponStateMachine.TryFire()) return;
                 BulletObjectFactory.CreateBullet(position, degAngle, BulletPrototype, Layers.GetLayer(LayerName.PlayerBullets), _dynamicGameObjects.transform);
-                AmmoContainer.RemoveAmmo(AmmoType.Bullets, 1);
+                Stats.AddAmount(StatsEnum.Bullets, -1);
             }
         }
     }

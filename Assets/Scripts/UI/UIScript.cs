@@ -1,32 +1,26 @@
 ﻿using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
-using Assets.Scripts.Weapons;
 using Game02.Assets.Scripts.Messages;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class UIScript : MonoBehaviour
 {
-    public static UIScript Instance;
-
     public Text AmmoText;
     public Text LivesText;
     public Text FPSText;
+    public Text EnergyText;
 
     private float _deltaTime;
 
     public void Start()
 	{
-	    Instance = this;
-	    
 	    PubSub.GlobalPubSub.Subscribe<HealthChangedMessage>(m => UpdateLives(((HealthChangedMessage)m).NewHealth));
-	    PubSub.GlobalPubSub.Subscribe<AmmoChangedMessage>(m => 
+        PubSub.GlobalPubSub.Subscribe<EnergyChangedMessage>(m => UpdateEnergy(((EnergyChangedMessage)m).NewValue));
+        PubSub.GlobalPubSub.Subscribe<AmmoChangedMessage>(m => 
 	    	{ 
 	    		var mes = (AmmoChangedMessage)m;
-	    		if (mes.Type == AmmoType.Bullets)
-	    		{
-	    			UpdateAmmo(mes.NewAmount);
-	    		}
+       			UpdateAmmo(mes.NewAmount);
 	    	});	
 		
 	}
@@ -38,6 +32,13 @@ public class UIScript : MonoBehaviour
         {
             FPSText.text = string.Format("FPS: {0}", 1.0f/_deltaTime);
         }
+    }
+
+    public void UpdateEnergy(int newValue)
+    {
+        if (EnergyText == null) return;
+
+        EnergyText.text = string.Format("Energy: {0}", newValue);
     }
 
     public void UpdateAmmo(int ammo)

@@ -16,9 +16,10 @@ public class ForcedMove
 }
 
 [RequireComponent(typeof(Animator))]
-public class Weapon2Script : MonoBehaviour, IWeapon
+public class Weapon2Script : MonoBehaviour, IAttack
 {
     public int WeaponDamage = 2;
+    public int EnergyRequired = 20;
 
     public List<ForcedMove> ReadyMoves;
     public List<ForcedMove> SwingMoves;
@@ -49,6 +50,11 @@ public class Weapon2Script : MonoBehaviour, IWeapon
     public int Id
     {
         get { return _id; }
+    }
+
+    public int RequiredEnergy
+    {
+        get { return EnergyRequired; }
     }
 
     public void Fire()

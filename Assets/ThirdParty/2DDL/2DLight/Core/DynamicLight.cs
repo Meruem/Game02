@@ -251,7 +251,7 @@ public class DynamicLight : MonoBehaviour {
 				if((tempWorld2d - tempLight2d).sqrMagnitude > (LightRadius*LightRadius))
 					continue;
 				
-				// instead of a Vert let's use basic types on the stack and construct the vert in the VertItem's Add method
+				// instead of a Vert let's use basic types on the stack and construct the vert in the VertItem's AddAmount method
 				
 				Vector3 pos;
 				bool endpoint = false;
@@ -286,18 +286,18 @@ public class DynamicLight : MonoBehaviour {
 							if (Vector3.Angle(lightObjectTM.InverseTransformPoint(pos), Vector3.up) < RangeLightAngle*.5f) {	// Light angle restriction
 								//-- GO reached --> adding to mail list --//
 								if(_ray.collider.gameObject.transform.parent){
-									ListObjectsReached.Add(_ray.collider.gameObject.transform.parent.gameObject);
+									ListObjectsReached.AddAmount(_ray.collider.gameObject.transform.parent.gameObject);
 								}else{
-									ListObjectsReached.Add(_ray.collider.gameObject);
+									ListObjectsReached.AddAmount(_ray.collider.gameObject);
 								}
 							}
 						}else{
 							//-- VERSION 1.3.1 FIX -- (WORKS IF HAS A COLLIDER2D INSIDE CHILD OR WITHOU IT)//
 							//-- GO reached --> adding to main list --//
 							if(_ray.collider.gameObject.transform.parent){
-								ListObjectsReached.Add(_ray.collider.gameObject.transform.parent.gameObject);
+								ListObjectsReached.AddAmount(_ray.collider.gameObject.transform.parent.gameObject);
 							}else{
-								ListObjectsReached.Add(_ray.collider.gameObject);
+								ListObjectsReached.AddAmount(_ray.collider.gameObject);
 							}
 							
 						}
@@ -346,20 +346,20 @@ public class DynamicLight : MonoBehaviour {
 				if (angle > 2f)
 					obj.his = true;
 				
-				//--Add verts to the main array
+				//--AddAmount verts to the main array
 				//-- AVOID EXTRA CALCULOUS OF Vector3.angle --//
 				
 				if(360 != Mathf.RoundToInt(RangeLightAngle)){ 
 					if (Vector3.Angle(pos, Vector3.up) < RangeLightAngle*.5f) {	// Light angle restriction
 						if((pos).sqrMagnitude <= LightRadius*LightRadius){
-							obj.Add(pos, endpoint, angle); // tempVerts.Add(v); // expensive
+							obj.Add(pos, endpoint, angle); // tempVerts.AddAmount(v); // expensive
 							if(Debugging == true)
 								Debug.DrawLine(lightObjectTM.position, lightObjectTM.TransformPoint(pos), Color.white);
 						}
 					}
 				}else{
 					if((pos).sqrMagnitude <= LightRadius*LightRadius){
-						obj.Add(pos, endpoint, angle); //tempVerts.Add(v);
+						obj.Add(pos, endpoint, angle); //tempVerts.AddAmount(v);
 					}
 				}
 				
@@ -427,7 +427,7 @@ public class DynamicLight : MonoBehaviour {
 			}
 			---- */ 
 
-			// Add GO inside in LightMesh to array of reached objects
+			// AddAmount GO inside in LightMesh to array of reached objects
 			if(tmpGOWithinFOV != null)
 				ListObjectsReached.Add(tmpGOWithinFOV);
 
@@ -763,7 +763,7 @@ public class DynamicLight : MonoBehaviour {
 
 		MeshRenderer renderer = GetComponent<MeshRenderer>();
 		if (renderer==null){
-			renderer = gameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;    // Add a Mesh Renderer component to the light game object so the form can become visible
+			renderer = gameObject.AddComponent(typeof(MeshRenderer)) as MeshRenderer;    // AddAmount a Mesh Renderer component to the light game object so the form can become visible
 		}
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		renderer.receiveShadows = false;
@@ -1287,7 +1287,7 @@ public class DynamicLight : MonoBehaviour {
 				
 
 				
-				//--Add vertices to the main meshes vertexes--//
+				//--AddAmount vertices to the main meshes vertexes--//
 				if(intelliderConvex == true && endPointLimit > 1){
 					_allVerts.Add(obj[posLowAngle]);
 					_allVerts.Add(obj[posHighAngle]);
@@ -1609,7 +1609,7 @@ public class DynamicLight : MonoBehaviour {
 				if(found == false){
 					// If GO is out of FOV
 					ToChange.Add(staticGoInTheList); // add to the list to remove later
-					//ToChange.Add(i);
+					//ToChange.AddAmount(i);
 					if(OnExitFieldOfView != null)
 						OnExitFieldOfView(staticGoInTheList);
 				}
@@ -1745,7 +1745,7 @@ public class DynamicLight : MonoBehaviour {
 			}else{
 				// Dont ROTATE HANDLING
 				//   **** v.pos = transform.InverseTransformPoint(_ray ? (Vector3)_ray.point : v.pos);
-				// **** _allVerts.Add(v);
+				// **** _allVerts.AddAmount(v);
 			
 				if (_ray){
 					v.pos = transform.InverseTransformPoint(_ray.point);

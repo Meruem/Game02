@@ -48,7 +48,7 @@ namespace Alg
         }
 
         ///
-        /// Add an item to the heap
+        /// AddAmount an item to the heap
         ///
         public void Insert(T item)
         {

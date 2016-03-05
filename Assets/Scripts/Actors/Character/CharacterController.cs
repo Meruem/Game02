@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Assets.Scripts;
+using Assets.Scripts.Actors.Stats;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Messages.Input;
 using Assets.Scripts.Misc;
@@ -11,16 +12,17 @@ public class CharacterController : MonoBehaviour
 {
     public float CharacterSpeed = 5;
     public float CharacterShieldedSpeed = 3;
-
+    
     public WeaponManager WeaponManager;
+    public Stats Stats;
 
     private bool _isShielded;
     private bool _isAttacking;
 
     private readonly List<int> _blockedWeaponIds = new List<int>();
-    private readonly List<WeaponHitMessage> _unresolvedMessage = new List<WeaponHitMessage>(); 
+    private readonly List<WeaponHitMessage> _unresolvedHitMessages = new List<WeaponHitMessage>(); 
     private float _nextReset;
-    private float _timeDeltaWait = 0.05f;
+    private float _timeDeltaWait = 0.01f;
 
     private IMoveScript _moveScript;
 
@@ -38,6 +40,8 @@ public class CharacterController : MonoBehaviour
 
         this.GetPubSub().SubscribeInContext<AttackEndedMessage>(m => HandleAttackEnded());
         this.GetPubSub().SubscribeInContext<ShieldHitMessage>(m => HandleShieldHitMessage((ShieldHitMessage)m));
+
+        Stats.AddRegen(StatsEnum.Energy, 10);
     }
 
     public void Update()
@@ -45,11 +49,11 @@ public class CharacterController : MonoBehaviour
         if (_nextReset > 0 && Time.time > _nextReset)
         {
             _blockedWeaponIds.Clear();
-            foreach (var message in _unresolvedMessage)
+            foreach (var message in _unresolvedHitMessages)
             {
-                this.GetPubSub().PublishMessageInContext(new TakeDamageMessage(message.Damage));
+                Stats.AddAmount(StatsEnum.Health, -message.Damage);
             }
-            _unresolvedMessage.Clear();
+            _unresolvedHitMessages.Clear();
             _nextReset = 0;
         }
     }
@@ -57,6 +61,7 @@ public class CharacterController : MonoBehaviour
     private void HandleShieldHitMessage(ShieldHitMessage shieldHitMessage)
     {
         _blockedWeaponIds.Add(shieldHitMessage.Weapon.GetInstanceID());
+        _unresolvedHitMessages.RemoveAll(m => m.Weapon.GetInstanceID() == shieldHitMessage.Weapon.GetInstanceID());
         _nextReset = Time.time + _timeDeltaWait;
     }
 
@@ -94,7 +99,6 @@ public class CharacterController : MonoBehaviour
         {
             WeaponManager.FirePrimary();
         }
-        //this.GetPubSub().PublishMessageInContext(new FireMessage(fireInputMessage.IsSecondary));
     }
 
     private void HandleMoveInput(MoveInputMessage moveInputMessage)
@@ -105,7 +109,7 @@ public class CharacterController : MonoBehaviour
     private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
     {
         if (_blockedWeaponIds.Contains(weaponHitMessage.Weapon.GetInstanceID())) return;
-        _unresolvedMessage.Add(weaponHitMessage);
+        _unresolvedHitMessages.Add(weaponHitMessage);
         _nextReset = Time.time + _timeDeltaWait;
     }
 }
