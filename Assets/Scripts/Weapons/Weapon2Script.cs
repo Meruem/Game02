@@ -19,7 +19,9 @@ public class ForcedMove
 public class Weapon2Script : MonoBehaviour, IAttack
 {
     public int WeaponDamage = 2;
+    public int AfterBlockEnergyDamage = 10;
     public int EnergyRequired = 20;
+    public int StabilityDamage = 10;
 
     public List<ForcedMove> ReadyMoves;
     public List<ForcedMove> SwingMoves;

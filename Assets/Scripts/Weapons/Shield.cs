@@ -6,6 +6,8 @@ namespace Assets.Scripts.Weapons
 {
     public class Shield : MonoBehaviour
     {
+        public float ShieldEnergyDamageRatio = 0.9f;
+
         private PolygonCollider2D[] _colliders;
         private SpriteRenderer[] _renderers;
 
@@ -25,7 +27,7 @@ namespace Assets.Scripts.Weapons
         {
             Debug.LogFormat("Shield hit");
             message.Weapon.GetPubSub().PublishMessageInContext(new WeaponBlockedMessage()); // notify weapon object
-            this.GetPubSub().PublishMessageInContext(new ShieldHitMessage(message.Weapon)); // notify parent object
+            this.GetPubSub().PublishMessageInContext(new ShieldHitMessage(message.Weapon) { EnergyDamage = (int)(message.AfterBlockEnergyDamage * ShieldEnergyDamageRatio)}); // notify parent object
         }
 
         private void HandleShieldChange(ShieldChangeMessage shieldChangeMessage)

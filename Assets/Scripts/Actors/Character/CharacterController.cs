@@ -39,12 +39,19 @@ public class CharacterController : MonoBehaviour
         this.GetPubSub().SubscribeInContext<ShieldInputMessage>(m => HandleShieldInput((ShieldInputMessage)m));
 
         this.GetPubSub().SubscribeInContext<AttackEndedMessage>(m => HandleAttackEnded());
+
+        // On shield hit
         this.GetPubSub().SubscribeInContext<ShieldHitMessage>(m => HandleShieldHitMessage((ShieldHitMessage)m));
 
         Stats.AddRegen(StatsEnum.Energy, 10);
     }
 
     public void Update()
+    {
+        ApplyDamage();
+    }
+
+    private void ApplyDamage()
     {
         if (_nextReset > 0 && Time.time > _nextReset)
         {
@@ -63,6 +70,7 @@ public class CharacterController : MonoBehaviour
         _blockedWeaponIds.Add(shieldHitMessage.Weapon.GetInstanceID());
         _unresolvedHitMessages.RemoveAll(m => m.Weapon.GetInstanceID() == shieldHitMessage.Weapon.GetInstanceID());
         _nextReset = Time.time + _timeDeltaWait;
+        Stats.AddAmount(StatsEnum.Energy, -shieldHitMessage.EnergyDamage);
     }
 
     private void HandleAttackEnded()

@@ -11,7 +11,8 @@ namespace Assets.Scripts.Actors.Stats
     {
         Health,
         Energy,
-        Bullets
+        Bullets,
+        Stability
     }
 
     [Serializable]
