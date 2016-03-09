@@ -46,6 +46,8 @@ namespace Assets.Scripts.Actors.Stats
 
         public bool HasEnaugh(StatsEnum stat, int required)
         {
+            if (required == 0) return true;
+
             if (!_currentValues.ContainsKey(stat))
             {
                 Debug.LogErrorFormat("Following stat is not defined for this object: {0}", stat.ToString());
@@ -53,6 +55,11 @@ namespace Assets.Scripts.Actors.Stats
             }
 
             return _currentValues[stat].Value >= required;
+        }
+
+        public bool IsStatDefined(StatsEnum stat)
+        {
+            return _currentValues.ContainsKey(stat);
         }
 
         public void AddAmount(StatsEnum stat, int amount)

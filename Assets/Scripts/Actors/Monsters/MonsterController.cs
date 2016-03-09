@@ -27,6 +27,8 @@ public class MonsterController : MonoBehaviour
     private ToMoveDirectionRotation _toMoveDirectionRotation;
     private ToTargetObjectRotation _toTargetObjectRotation;
 
+    private WeaponManager _weaponManager;
+
     private bool _gunCooldown;
 
     public void Awake()
@@ -39,6 +41,12 @@ public class MonsterController : MonoBehaviour
         var shadowLayer = Layers.GetLayer(LayerName.ShadowLayer);
         _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
         _moveScript = GetComponent<IMoveScript>();
+        _weaponManager = GetComponentInChildren<WeaponManager>();
+
+        if (_weaponManager == null)
+        {
+            Debug.LogError("Weapon manager not found in child objects.");
+        }
     }
 
     public void Start ()
@@ -93,7 +101,7 @@ public class MonsterController : MonoBehaviour
     
     private void Attack()
     {
-    	this.GetPubSub().PublishMessageInContext(new FireMessage(true));
+    	_weaponManager.FirePrimary();
     }
 
     IEnumerator WeaponCooldown(float time)

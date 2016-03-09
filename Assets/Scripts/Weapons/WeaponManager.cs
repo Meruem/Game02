@@ -45,7 +45,7 @@ namespace Assets.Scripts.Weapons
             FireAttack(_primaryAttack);
         }
 
-        public void FireAttack(IAttack attack)
+        private void FireAttack(IAttack attack)
         {
             if (Stats == null && attack.RequiredEnergy > 0)
             {
@@ -53,14 +53,14 @@ namespace Assets.Scripts.Weapons
                 return;
             }
 
-            if (Stats != null && !Stats.HasEnaugh(StatsEnum.Energy, attack.RequiredEnergy))
+            if (Stats != null && Stats.IsStatDefined(StatsEnum.Energy) && !Stats.HasEnaugh(StatsEnum.Energy, attack.RequiredEnergy))
             {
                 Debug.Log("Not enaugh energy.");
                 return;
             }
 
             attack.Fire();
-            if (Stats != null)
+            if (Stats != null && Stats.IsStatDefined(StatsEnum.Energy))
             {
                 Stats.AddAmount(StatsEnum.Energy, -attack.RequiredEnergy);
             }

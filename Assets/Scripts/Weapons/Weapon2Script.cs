@@ -36,15 +36,11 @@ public class Weapon2Script : MonoBehaviour, IAttack
     private Animator _animator;
     private int _id;
 
-    void Start()
+    public void Start()
     {
         _id = gameObject.GetInstanceID();
         _animator = GetComponent<Animator>();
         AlreadyHitTargets = new List<int>();
-        this.GetPubSub().SubscribeInContext<FireMessage>(m =>
-        {
-            if (((FireMessage)m).IsSecondary) Fire();
-        });
 
         this.GetPubSub().SubscribeInContext<WeaponBlockedMessage>(m => ShieldHit());
     }
@@ -98,10 +94,10 @@ public class Weapon2Script : MonoBehaviour, IAttack
         _animator.SetBool("IsRedying", false);
 
         // swing phase
-        direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); //recalculate
         _animator.SetBool("IsSwinging", true);
         if (SwingMoves != null)
         {
+            direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); //recalculate
             for (var i = 0; i < SwingMoves.Count; i++)
             {
                 if (_isBlocked) break;
