@@ -134,7 +134,7 @@ namespace Assets.Scripts
                         case MapGenerator.TileType.Wall:
                             newTransform = (Transform)Instantiate(WallTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
                             break;
-                        case MapGenerator.TileType.Free:
+                        case MapGenerator.TileType.Room:
                             newTransform = (Transform)Instantiate(GroudTile, new Vector3(i * tileWidth, j * tileHeight, 0), Quaternion.identity);
                             break;
                     }
@@ -187,7 +187,7 @@ namespace Assets.Scripts
                 var x = Random.Range(0, _map.MapWidth - 1);
                 var y = Random.Range(0, _map.MapHeight - 1);
 
-                if (_map[x, y].TileType == MapGenerator.TileType.Free)
+                if (_map[x, y].TileType == MapGenerator.TileType.Room)
                 {
                     position = new Vector2(bounds.x * x, bounds.y * y);
                 }

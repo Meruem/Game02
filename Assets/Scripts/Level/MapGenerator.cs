@@ -4,14 +4,19 @@ using System.Linq;
 
 namespace Assets.Scripts
 {
+    public interface IRoomQuery
+    {
+        List<MapGenerator.RoomInfo> GetRooms();
+    }
+
     public class MapGenerator
     {
         public enum TileType
         {
-            Wall,
-            Free,
-            Exit,
-            Border // special case for room maps
+            Wall = 0,
+            Room = 1,
+            Exit = 2,
+            Border = 3, // special case for room maps
         }
 
         private struct Position
@@ -25,34 +30,78 @@ namespace Assets.Scripts
             }
         }
 
-        public class RoomInfo
+        public class RoomMap
+        {
+            public TileType[,] Map;
+            public List<ExitInfo> Exits = new List<ExitInfo>();
+
+            public int Width;
+            public int Height;
+        }
+
+        public class DynamicRoom
         {
             public int MinWidth;
             public int MaxWidth;
             public int MinHeight;
             public int MaxHeight;
-            public int MinExits;
-            public int MaxExits;
-            public bool Border;
-            public bool CleanDeadEnds;
-            public RoomMap RoomMap;
-            public int ProbWeight;
+            public bool HasBorder;
 
-            public RoomInfo(int minExits, int maxExits)
-            {
-                MinExits = minExits;
-                MaxExits = maxExits;
-                ProbWeight = 1;
-            }
-
-            public RoomInfo(int minWidth, int maxWidth, int minHeight, int maxHeight, int minExits, int maxExits, bool border = false)
-                : this(minExits, maxExits)
+            public DynamicRoom(int minWidth, int maxWidth, int minHeight, int maxHeight, bool hasBorder = false)
             {
                 MinWidth = minWidth;
                 MaxWidth = maxWidth;
                 MinHeight = minHeight;
                 MaxHeight = maxHeight;
-                Border = border;
+                HasBorder = hasBorder;
+            }
+        }
+
+        public class ExitInfo
+        {
+            public int X;
+            public int Y;
+
+            public ExitInfo(int x, int y)
+            {
+                X = x;
+                Y = y;
+            }
+        }
+
+        public class RoomInfo
+        {
+            public string RoomName;
+            public int MinExits;
+            public int MaxExits;
+            public bool CleanDeadEnds;
+            public int ProbWeight;
+
+            public RoomMap RoomMap;
+            public DynamicRoom DynamicRoom;
+
+            public RoomInfo()
+            {
+            }
+
+            private RoomInfo(string roomName, int minExits, int maxExits)
+            {
+                RoomName = roomName;
+                MinExits = minExits;
+                MaxExits = maxExits;
+                ProbWeight = 1;
+            }
+
+            public RoomInfo(string roomName, int minExits, int maxExits, RoomMap roomMap)
+                : this(roomName, minExits, maxExits)
+            {
+                RoomMap = roomMap;
+            }
+
+            public RoomInfo(string roomName, int minExits, int maxExits, DynamicRoom dynamicRoom)
+                : this(roomName, minExits, maxExits)
+            {
+                DynamicRoom = dynamicRoom;
             }
         }
 
@@ -66,8 +115,9 @@ namespace Assets.Scripts
 
         private TileType[,] _tileMap;
         private readonly int _maxTriesToBuildNewRoom = 10;
-        private readonly int _maxAdditionalExitsCount = 100;
+        private readonly int _maxAdditionalExitsCount = 50;
         private readonly float _minFreeTileRatio;
+        private readonly bool _useAlsoDefaultRooms;
 
         private readonly IList<Position> _directions = new List<Position>
         {
@@ -77,20 +127,30 @@ namespace Assets.Scripts
             new Position {X = -1, Y = 0},
         };
 
-        public MapGenerator(int width, int height, float minFreeTileRatio)
+        public MapGenerator(int width, int height, float minFreeTileRatio, IRoomQuery roomQuery = null, bool useAlsoDefaultRooms = false)
         {
             if (width < 30 || height < 30) throw new ArgumentOutOfRangeException("width and height must be over 30");
 
             MapWidth = width;
             MapHeight = height;
             _minFreeTileRatio = minFreeTileRatio;
+            _useAlsoDefaultRooms = useAlsoDefaultRooms;
+            if (roomQuery != null)
+            {
+                Rooms = roomQuery.GetRooms();
+            }
         }
 
         public TileType[,] GenerateMap()
         {
             if (Rooms == null || Rooms.Count == 0)
             {
-                GenerateDefaultRooms();
+                Rooms = GenerateDefaultRooms();
+            }
+            else if (_useAlsoDefaultRooms)
+            {
+                var addRooms = GenerateDefaultRooms();
+                Rooms = Rooms.Concat(addRooms).ToList();
             }
 
             if (Rooms == null) return null;
@@ -110,7 +170,7 @@ namespace Assets.Scripts
         {
             int freeTilesCount;
             int count = 0;
-            var minFreeTilesCount = MapHeight * MapWidth *_minFreeTileRatio;
+            var minFreeTilesCount = MapHeight * MapWidth * _minFreeTileRatio;
             do
             {
                 while (_queue.Count > 0)
@@ -143,17 +203,17 @@ namespace Assets.Scripts
         {
             var x = _random.Next(0, MapWidth);
             var y = _random.Next(0, MapHeight);
-            while (!IsTileWall(x, y) || !HasFreeNeighbor(new Position { X =  x, Y = y}))
+            while (!IsTileWall(x, y) || !HasFreeNeighbor(new Position { X = x, Y = y }))
             {
                 x++;
                 if (x == MapWidth)
                 {
                     x = 0;
-                    y = (y + 1)%MapHeight;
+                    y = (y + 1) % MapHeight;
                 }
             }
 
-            var pos = new Position {X = x, Y = y};
+            var pos = new Position { X = x, Y = y };
             AddExitAtPosition(pos);
             _exitsToCheck.Add(pos);
         }
@@ -162,13 +222,13 @@ namespace Assets.Scripts
         {
             var freeAround = _directions
                 .Select(dir => pos + dir)
-                .Count(newPos => !IsPositionOutOfBounds(newPos) && _tileMap[newPos.X, newPos.Y] == TileType.Free);
+                .Count(newPos => !IsPositionOutOfBounds(newPos) && _tileMap[newPos.X, newPos.Y] == TileType.Room);
             return freeAround > 0;
         }
 
         private int GetFreeTilesCount()
         {
-            return ForEachTile(t => t == TileType.Free ? 1 : 0).Sum();
+            return ForEachTile(t => t == TileType.Room ? 1 : 0).Sum();
         }
 
         private IEnumerable<T> ForEachTile<T>(Func<TileType, T> func)
@@ -200,56 +260,21 @@ namespace Assets.Scripts
             {
                 var wallsAround = _directions
                     .Select(dir => exit + dir)
-                    .Count(newPos => !IsPositionOutOfBounds(newPos) && _tileMap[newPos.X, newPos.Y] == TileType.Free);
+                    .Count(newPos => !IsPositionOutOfBounds(newPos) && _tileMap[newPos.X, newPos.Y] == TileType.Room);
 
                 if (wallsAround < 2)
                 {
                     _tileMap[exit.X, exit.Y] = TileType.Wall;
                 }
-
-                //var exitDirections = _directions.Select(dir => exit + dir).ToList();
-                //var isDoor = (IsTileFree(exitDirections[0]) && IsTileFree(exitDirections[1]))
-                //             || (IsTileFree(exitDirections[2]) && IsTileFree(exitDirections[3]));
-
-                //if (!isDoor)
-                //{
-                //    _tileMap[exit.X, exit.Y] = TileType.Wall;
-                //}
             }
 
             _exitsToCheck.Clear();
         }
 
-        private void GenerateDefaultRooms()
-        {
-            Rooms = new List<RoomInfo>
-            {
-                new RoomInfo(3, 5, 3, 5, 2, 4, true) { CleanDeadEnds = true}, // small room
-                new RoomInfo(6, 12, 6, 12, 3, 5, true) { CleanDeadEnds = true}, // large room
-                new RoomInfo(1, 2, 4, 7, 1, 2, true) { CleanDeadEnds = true}, // small corridor
-                new RoomInfo(4, 7, 1, 2, 1, 2, true) { CleanDeadEnds = true}, // small corridor
-                new RoomInfo(3, 5, 6, 12, 1, 5, true) { CleanDeadEnds = true}, // large corridor
-                new RoomInfo(6, 12, 3, 5, 1, 5, true) { CleanDeadEnds = true},  // large corridor
-                new RoomInfo(1, 3) { CleanDeadEnds = true, RoomMap = new RoomMap { // round room
-                    Height = 7, 
-                    Width = 7, 
-                    Map = new[,]
-                {
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Border,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Border,TileType.Free,TileType.Border,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Border, TileType.Free,TileType.Free,TileType.Free,TileType.Border,TileType.Wall},
-                    {TileType.Border, TileType.Free, TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Border},
-                    {TileType.Wall, TileType.Border, TileType.Free,TileType.Free,TileType.Free,TileType.Border,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Border,TileType.Free,TileType.Border,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Border,TileType.Wall,TileType.Wall,TileType.Wall}
-                }}}
-            };
-        }
-
         private bool BuildRoomFromRoomMap(Position pos, RoomInfo room)
         {
             var map = room.RoomMap;
-            var entrancePositions = GetEntrancePositionsFromRoomMap(map);
+            var entrancePositions = GetEntrancePositionsFromRoom(room.RoomMap);
             var start = _random.Next(0, entrancePositions.Count);
             for (int i = 0; i < entrancePositions.Count; i++)
             {
@@ -269,21 +294,9 @@ namespace Assets.Scripts
             return false;
         }
 
-        private IList<Position> GetEntrancePositionsFromRoomMap(RoomMap map)
+        private IList<Position> GetEntrancePositionsFromRoom(RoomMap map)
         {
-            var result = new List<Position>();
-            for (int i = 0; i < map.Width; i++)
-            {
-                for (int j = 0; j < map.Height; j++)
-                {
-                    if (map.Map[i, j] == TileType.Border)
-                    {
-                        result.Add(new Position { X = i, Y = j });
-                    }
-                }
-            }
-
-            return result;
+            return map.Exits.Select(ri => new Position { X = ri.X, Y = ri.Y }).ToList();
         }
 
         private RoomMap BuildRoomMap(int width, int height, bool useBorder)
@@ -301,41 +314,57 @@ namespace Assets.Scripts
             {
                 for (int j = 0; j < adjHeight; j++)
                 {
-                    map.Map[i, j] = TileType.Free;
+                    map.Map[i, j] = TileType.Room;
                 }
             }
 
             if (useBorder)
             {
-                map.Map[0, 0] = TileType.Wall;
-                map.Map[0, adjHeight - 1] = TileType.Wall;
-                map.Map[adjWidth - 1, 0] = TileType.Wall;
-                map.Map[adjWidth - 1, adjHeight - 1] = TileType.Wall;
+                map.Map[0, 0] = TileType.Border;
+                map.Map[0, adjHeight - 1] = TileType.Border;
+                map.Map[adjWidth - 1, 0] = TileType.Border;
+                map.Map[adjWidth - 1, adjHeight - 1] = TileType.Border;
+            }
 
-                for (int i = 1; i < adjWidth - 1; i++)
+            var exits = new List<ExitInfo>();
+
+            for (int i = 1; i < adjWidth - 1; i++)
+            {
+                if (useBorder)
                 {
                     map.Map[i, 0] = TileType.Border;
                     map.Map[i, adjHeight - 1] = TileType.Border;
                 }
 
-                for (int i = 1; i < adjHeight - 1; i++)
+                exits.Add(new ExitInfo(i, 0));
+                exits.Add(new ExitInfo(i, adjHeight - 1));
+            }
+
+            for (int i = 1; i < adjHeight - 1; i++)
+            {
+                if (useBorder)
                 {
                     map.Map[0, i] = TileType.Border;
                     map.Map[adjWidth - 1, i] = TileType.Border;
                 }
+
+                exits.Add(new ExitInfo(0, i));
+                exits.Add(new ExitInfo(adjWidth - 1, i));
             }
+
+            map.Exits = exits;
 
             return map;
         }
 
         private bool BuildRoom(Position pos, RoomInfo room)
         {
-            var width = _random.Next(room.MinWidth, room.MaxWidth + 1);
-            var height = _random.Next(room.MinHeight, room.MaxHeight + 1);
-
-            if (room.RoomMap == null)
+            if (room.RoomMap == null && room.DynamicRoom != null)
             {
-                room.RoomMap = BuildRoomMap(width, height, room.Border);
+                var width = _random.Next(room.DynamicRoom.MinWidth, room.DynamicRoom.MaxWidth + 1);
+                var height = _random.Next(room.DynamicRoom.MinHeight, room.DynamicRoom.MaxHeight + 1);
+
+                room.RoomMap = BuildRoomMap(width, height, room.DynamicRoom.HasBorder);
             }
 
             return BuildRoomFromRoomMap(pos, room);
@@ -365,13 +394,6 @@ namespace Assets.Scripts
             }
         }
 
-        public class RoomMap
-        {
-            public TileType[,] Map { get; set; }
-            public int Width { get; set; }
-            public int Height { get; set; }
-        }
-
         private bool IsRoomAvailable(Position leftTop, RoomMap roomMap)
         {
             for (int i = 0; i < roomMap.Width; i++)
@@ -380,7 +402,7 @@ namespace Assets.Scripts
                 {
                     var newPos = leftTop + new Position { X = i, Y = j };
                     if (IsPositionOutOfBounds(newPos)) return false;
-                    if ((roomMap.Map[i, j] == TileType.Free || roomMap.Map[i, j] == TileType.Border) && _tileMap[newPos.X, newPos.Y] == TileType.Free)
+                    if ((roomMap.Map[i, j] == TileType.Room || roomMap.Map[i, j] == TileType.Border) && _tileMap[newPos.X, newPos.Y] == TileType.Room)
                         return false;
                 }
             }
@@ -394,9 +416,9 @@ namespace Assets.Scripts
             {
                 for (int j = leftTop.Y; j < leftTop.Y + roomMap.Height; j++)
                 {
-                    if (roomMap.Map[i - leftTop.X, j - leftTop.Y] == TileType.Free)
+                    if (roomMap.Map[i - leftTop.X, j - leftTop.Y] == TileType.Room)
                     {
-                        _tileMap[i, j] = TileType.Free;
+                        _tileMap[i, j] = TileType.Room;
                     }
                 }
             }
@@ -410,24 +432,7 @@ namespace Assets.Scripts
 
         private void BuildCenterRoom()
         {
-            CreateRoom(new Position { X = MapWidth / 2 - 5, Y = MapHeight / 2 - 5 }, new RoomMap {
-                    Height = 11, 
-                    Width = 11, 
-                    Map = new[,]
-                {
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Free,TileType.Free,TileType.Free,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Free,TileType.Free,TileType.Free,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Free,TileType.Free,TileType.Free,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Free, TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Wall},
-                    {TileType.Wall, TileType.Free, TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Wall},
-                    {TileType.Wall, TileType.Free, TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Free,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Free,TileType.Free,TileType.Free,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Free,TileType.Free,TileType.Free,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Free,TileType.Free,TileType.Free,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
-                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall}
-                }
-            });
+            CreateRoom(new Position { X = MapWidth / 2 - 5, Y = MapHeight / 2 - 5 }, GenerateCentralRoomMap());
 
             var exit1 = new Position { X = MapWidth / 2 - 5, Y = MapHeight / 2 };
             var exit2 = new Position { X = MapWidth / 2 + 5, Y = MapHeight / 2 };
@@ -438,11 +443,6 @@ namespace Assets.Scripts
             AddExitAtPosition(exit2);
             AddExitAtPosition(exit3);
             AddExitAtPosition(exit4);
-        }
-
-        private bool IsTileFree(Position pos)
-        {
-            return !IsPositionOutOfBounds(pos) && _tileMap[pos.X, pos.Y] == TileType.Free;
         }
 
         private bool IsTileWall(Position pos)
@@ -463,6 +463,55 @@ namespace Assets.Scripts
         private bool IsPositionOutOfBounds(Position pos)
         {
             return IsPositionOutOfBounds(pos.X, pos.Y);
+        }
+
+        private List<RoomInfo> GenerateDefaultRooms()
+        {
+            return new List<RoomInfo>
+            {
+                new RoomInfo("Small Room", 2, 4, new DynamicRoom(3, 5, 3, 5, true)) { CleanDeadEnds = true}, // small room
+                new RoomInfo("Large Room", 3, 5, new DynamicRoom(6, 12, 6, 12, true)) { CleanDeadEnds = true}, // large room
+                new RoomInfo("Small corridor 1", 1, 2, new DynamicRoom(1, 2, 4, 7, true)) { CleanDeadEnds = true}, // small corridor
+                new RoomInfo("Small corridor 2", 1, 2, new DynamicRoom(4, 7, 1, 2, true)) { CleanDeadEnds = true}, // small corridor
+                new RoomInfo("Large corridor 1", 1, 5, new DynamicRoom(3, 5, 6, 12, true)) { CleanDeadEnds = true}, // large corridor
+                new RoomInfo("Large corridor 2" , 1, 5, new DynamicRoom(6, 12, 3, 5, true)) { CleanDeadEnds = true},  // large corridor
+                new RoomInfo("Circle", 1, 3, new RoomMap { // round room
+                    Height = 7,
+                    Width = 7,
+                    Map = new[,]
+                {
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Border,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Border,TileType.Room,TileType.Border,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Border, TileType.Room,TileType.Room,TileType.Room,TileType.Border,TileType.Wall},
+                    {TileType.Border, TileType.Room, TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Border},
+                    {TileType.Wall, TileType.Border, TileType.Room,TileType.Room,TileType.Room,TileType.Border,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Border,TileType.Room,TileType.Border,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Border,TileType.Wall,TileType.Wall,TileType.Wall}
+                }}) {CleanDeadEnds = true}
+            };
+        }
+
+        private RoomMap GenerateCentralRoomMap()
+        {
+            return new RoomMap
+            {
+                Height = 11,
+                Width = 11,
+                Map = new[,]
+                {
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Room,TileType.Room,TileType.Room,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Room,TileType.Room,TileType.Room,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Room,TileType.Room,TileType.Room,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Room, TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Wall},
+                    {TileType.Wall, TileType.Room, TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Wall},
+                    {TileType.Wall, TileType.Room, TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Room,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Room,TileType.Room,TileType.Room,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Room,TileType.Room,TileType.Room,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Room,TileType.Room,TileType.Room,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall},
+                    {TileType.Wall, TileType.Wall, TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall,TileType.Wall}
+                }
+            };
         }
     }
 }

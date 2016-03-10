@@ -12,6 +12,11 @@ namespace Assets.Scripts
             {
                 this.GetPubSub().PublishMessageGlobal(new RestartLevelMessage());
             }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Application.Quit();
+            }
         }
     }
 }
