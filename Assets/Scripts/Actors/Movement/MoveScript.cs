@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Assets.Scripts.Messages;
+﻿using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using UnityEngine;
 
@@ -18,11 +17,27 @@ namespace Assets.Scripts
 
         private bool _isInForcedMovement;
 
+        private float _forcedTimeEnd;
+        private ForceMovementMessage _lastForcedMessage;
+
         private void Start()
         {
             _animator = GetComponentInChildren<Animator>();
             _cachedRigidBody2D = GetComponent<Rigidbody2D>();
             this.GetPubSub().SubscribeInContext<ForceMovementMessage>(m => ForceMove((ForceMovementMessage)m));
+        }
+
+        public void Update()
+        {
+            if (Time.time < _forcedTimeEnd && _lastForcedMessage != null)
+            {
+                _isInForcedMovement = true;
+                Move(_lastForcedMessage.Direction, _lastForcedMessage.Speed);
+            }
+            else
+            {
+                _isInForcedMovement = false;
+            }
         }
 
         public void MoveNormal(Vector2 direction, float speed)
@@ -39,21 +54,15 @@ namespace Assets.Scripts
         private void ForceMove(ForceMovementMessage forceMovementMessage)
         {
             if (forceMovementMessage.AllowOtherMovement) return;
-            StartCoroutine(ForceMoveCoroutine(forceMovementMessage.Direction, forceMovementMessage.Speed, forceMovementMessage.ForwardTime));
-        }
-
-        private IEnumerator ForceMoveCoroutine(Vector2 direction, float speed, float time)
-        {
-            _isInForcedMovement = true;
-            Move(direction, speed);
-            yield return new WaitForSeconds(time);
-            Move(Vector2.zero, 0);
-            _isInForcedMovement = false;
+            _lastForcedMessage = forceMovementMessage;
+            _forcedTimeEnd = Time.time + forceMovementMessage.ForwardTime;
         }
 
         private void Move(Vector2 movement, float speed)
         {
             if (_cachedRigidBody2D == null) return;
+
+            if (movement == Vector2.zero) _cachedRigidBody2D.velocity = Vector2.zero;
 
             _cachedRigidBody2D.velocity = new Vector2(movement.x * speed, movement.y * speed);
 

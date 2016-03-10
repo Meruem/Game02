@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts.Misc
 {
@@ -25,5 +27,16 @@ namespace Assets.Scripts.Misc
                 action(item);
             }
         }
+
+        public static void StartAfterTime(this MonoBehaviour mb, Action a, float time)
+        {
+            mb.StartCoroutine(AfterTimeCourutine(a, time));
+        }
+
+        private static IEnumerator AfterTimeCourutine(Action a, float time)
+        {
+            yield return new WaitForSeconds(time);
+            a();
+        } 
     }
 }

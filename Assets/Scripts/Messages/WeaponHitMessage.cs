@@ -7,6 +7,7 @@ namespace Assets.Scripts.Messages
         public int Damage { get; private set; }
 
         public int AfterBlockEnergyDamage { get; set; }
+        public int StabilityDamage { get; set; }
 
         public GameObject Weapon { get; private set; }
 

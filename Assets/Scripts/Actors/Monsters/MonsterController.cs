@@ -30,6 +30,7 @@ public class MonsterController : MonoBehaviour
     private WeaponManager _weaponManager;
 
     private bool _gunCooldown;
+    private bool _isStaggered;
 
     public void Awake()
     {
@@ -49,19 +50,37 @@ public class MonsterController : MonoBehaviour
         }
     }
 
-    public void Start ()
+    public void Start()
 	{
         this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
 	    StartCoroutine(WanderAround());
+
+        // On Stagger
+        this.GetPubSub().SubscribeInContext<StaggerMessage>(m => HandleStaggerMessage((StaggerMessage)m));
+
+        Stats.AddRegen(StatsEnum.Stability, 10);
+    }
+
+    private void HandleStaggerMessage(StaggerMessage message)
+    {
+        _isStaggered = true;
+        // disable movement
+        this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(Vector2.zero, 0, message.Time, false));
+
+        _weaponManager.CancelAttack();
+        this.StartAfterTime(() => { _isStaggered = false; }, message.Time);
     }
 
     private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
     {
         Stats.AddAmount(StatsEnum.Health, -weaponHitMessage.Damage);
+        Stats.AddAmount(StatsEnum.Stability, -weaponHitMessage.StabilityDamage);
     }
 
     private void FireBullet(float angle)
     {
+        if (_isStaggered) return;
+
         if (BulletPrototype.Prefab == null)
         {
             Debug.LogWarning("Prototype is null.");
@@ -74,6 +93,8 @@ public class MonsterController : MonoBehaviour
 
     private void Move(Vector2 vector)
     {
+        if (_isStaggered) return;
+
         if (_toMoveDirectionRotation != null)
         {
             _toMoveDirectionRotation.MoveBackwards = false;
@@ -83,25 +104,19 @@ public class MonsterController : MonoBehaviour
 
     private void MoveBackWards(Vector2 vector)
     {
+        if (_isStaggered) return;
+
         if (_toMoveDirectionRotation != null)
         {
             _toMoveDirectionRotation.MoveBackwards = true;
         }
         _moveScript.MoveMaxSpeed(vector);
     }
-
-    private void Move(Vector2 vector, float speed)
-    {
-        if (_toMoveDirectionRotation != null)
-        {
-            _toMoveDirectionRotation.MoveBackwards = false;
-        }
-        _moveScript.MoveNormal(vector, speed);
-    }
     
     private void Attack()
     {
-    	_weaponManager.FirePrimary();
+        if (_isStaggered) return;
+        _weaponManager.FirePrimary();
     }
 
     IEnumerator WeaponCooldown(float time)

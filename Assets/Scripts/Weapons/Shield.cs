@@ -27,7 +27,11 @@ namespace Assets.Scripts.Weapons
         {
             Debug.LogFormat("Shield hit");
             message.Weapon.GetPubSub().PublishMessageInContext(new WeaponBlockedMessage()); // notify weapon object
-            this.GetPubSub().PublishMessageInContext(new ShieldHitMessage(message.Weapon) { EnergyDamage = (int)(message.AfterBlockEnergyDamage * ShieldEnergyDamageRatio)}); // notify parent object
+            this.GetPubSub().PublishMessageInContext(new ShieldHitMessage(message.Weapon)
+            {
+                EnergyDamage = (int)(message.AfterBlockEnergyDamage * ShieldEnergyDamageRatio),
+                OriginalDamage = message.Damage
+            }); // notify parent object
         }
 
         private void HandleShieldChange(ShieldChangeMessage shieldChangeMessage)

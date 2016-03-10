@@ -5,5 +5,7 @@
         void Fire();
         int Id { get; }
         int RequiredEnergy { get; }
+        bool CanFire { get; }
+        void CancelAttack();
     }
 }

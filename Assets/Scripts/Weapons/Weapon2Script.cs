@@ -31,13 +31,16 @@ public class Weapon2Script : MonoBehaviour, IAttack
 
     public List<int> AlreadyHitTargets { get; private set; }
 
-    private bool _canFire = true;
+    public bool CanFire { get; private set; }
+
     private bool _isBlocked;
     private Animator _animator;
     private int _id;
+    private bool _isCanceled;
 
     public void Start()
     {
+        CanFire = true;
         _id = gameObject.GetInstanceID();
         _animator = GetComponent<Animator>();
         AlreadyHitTargets = new List<int>();
@@ -58,10 +61,18 @@ public class Weapon2Script : MonoBehaviour, IAttack
     public void Fire()
     {
         // Hit started
-        if (_canFire)
+        if (CanFire)
         {
             StartCoroutine(Swing());
         }
+    }
+
+    public void CancelAttack()
+    {
+        if (CanFire) return; // not attacking
+        _isCanceled = true;
+        _animator.SetBool("IsSwinging", false);
+        _animator.SetBool("IsBlocked", true);
     }
 
     private void ShieldHit()
@@ -74,8 +85,9 @@ public class Weapon2Script : MonoBehaviour, IAttack
 
     private IEnumerator Swing()
     {
-        _canFire = false;
+        CanFire = false;
         _isBlocked = false;
+        _isCanceled = false;
         _animator.SetBool("IsBlocked", false);
         AlreadyHitTargets.Clear();
         var direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment);
@@ -86,6 +98,7 @@ public class Weapon2Script : MonoBehaviour, IAttack
         {
             for (var i = 0; i < ReadyMoves.Count; i++)
             {
+                if (_isCanceled) break;
                 var move = ReadyMoves[i];
                 this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
                 yield return new WaitForSeconds(move.Time);
@@ -100,7 +113,7 @@ public class Weapon2Script : MonoBehaviour, IAttack
             direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); //recalculate
             for (var i = 0; i < SwingMoves.Count; i++)
             {
-                if (_isBlocked) break;
+                if (_isBlocked || _isCanceled) break;
                 var move = SwingMoves[i];
                 this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
                 yield return new WaitForSeconds(move.Time);
@@ -115,13 +128,14 @@ public class Weapon2Script : MonoBehaviour, IAttack
         {
             for (var i = 0; i < RecoverMoves.Count; i++)
             {
+                if (_isCanceled) break;
                 var move = RecoverMoves[i];
                 this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
                 yield return new WaitForSeconds(move.Time);
             }
         }
         _animator.SetBool("IsRecovering", false);
-        _canFire = true;
+        CanFire = true;
 
         this.GetPubSub().PublishMessageInContext(new AttackEndedMessage());
     }

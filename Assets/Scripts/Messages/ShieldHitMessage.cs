@@ -6,6 +6,7 @@ namespace Assets.Scripts.Messages
     {
         public GameObject Weapon { get; private set; }
         public int EnergyDamage { get; set; }
+        public int OriginalDamage { get; set; }
 
         public ShieldHitMessage(GameObject weapon)
         {

@@ -22,6 +22,12 @@ namespace Assets.Scripts.Weapons
             }
         }
 
+        public void CancelAttack()
+        {
+            _primaryAttack.CancelAttack();
+            _secondaryAttack.CancelAttack();
+        }
+
         public void ChangePrimaryWeapon(int weaponNumber)
         {
             if (!CheckWeaponCount(weaponNumber)) return;
@@ -34,36 +40,40 @@ namespace Assets.Scripts.Weapons
             _secondaryAttack = _weapons[weaponNumber];
         }
 
-        public void FirePrimary()
+        public bool FirePrimary()
         {
             if (_primaryAttack == null)
             {
                 Debug.Log("No primary weapon selected");
-                return;
+                return false;
             }
 
-            FireAttack(_primaryAttack);
+            return FireAttack(_primaryAttack);
         }
 
-        private void FireAttack(IAttack attack)
+        private bool FireAttack(IAttack attack)
         {
             if (Stats == null && attack.RequiredEnergy > 0)
             {
                 Debug.Log("Weapon requires energy to use, but no energy component attached.");
-                return;
+                return false;
             }
 
             if (Stats != null && Stats.IsStatDefined(StatsEnum.Energy) && !Stats.HasEnaugh(StatsEnum.Energy, attack.RequiredEnergy))
             {
                 Debug.Log("Not enaugh energy.");
-                return;
+                return false;
             }
+
+            if (!attack.CanFire) return false;
 
             attack.Fire();
             if (Stats != null && Stats.IsStatDefined(StatsEnum.Energy))
             {
                 Stats.AddAmount(StatsEnum.Energy, -attack.RequiredEnergy);
             }
+
+            return true;
         }
 
         public void FireSecondary()

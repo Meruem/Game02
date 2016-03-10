@@ -39,6 +39,13 @@ namespace Assets.Scripts.Weapons
             get { return EnergyRequired; }
         }
 
+        public void CancelAttack()
+        {
+            // do nothing
+        }
+
+        public bool CanFire { get { return _weaponStateMachine.GetState() == WeaponState.Inactive; } }
+
         private void Fire(Vector2 position, float degAngle)
         {
             if (Stats == null)
