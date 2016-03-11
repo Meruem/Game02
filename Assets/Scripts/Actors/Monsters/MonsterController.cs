@@ -133,17 +133,17 @@ public class MonsterController : MonoBehaviour
         {
             if (VisibilityHelper.CheckVisibility(transform, _playerGameObject.transform, MaxVisibleDistance, _layerMask))
             {
-                if (_toTargetObjectRotation != null)
+                if (_toTargetObjectRotation != null && !_toTargetObjectRotation.enabled)
                 {
                     _toTargetObjectRotation.Target = _playerGameObject.transform;
                     _toTargetObjectRotation.enabled = true;
                 }
-                if (_toMoveDirectionRotation != null)
+                if (_toMoveDirectionRotation != null && _toMoveDirectionRotation.enabled)
                 {
                     _toMoveDirectionRotation.enabled = false;
                 }
 
-                if (Stats.HasEnaugh(StatsEnum.Bullets, 1) && !_gunCooldown)
+                if (!_isStaggered && Stats.HasEnaugh(StatsEnum.Bullets, 1) && !_gunCooldown)
                 {
                     var q = Quaternion.LookRotation(Vector3.forward,
                         _playerGameObject.transform.position - transform.position);
@@ -175,11 +175,11 @@ public class MonsterController : MonoBehaviour
             }
             else
             {
-                if (_toTargetObjectRotation != null)
+                if (_toTargetObjectRotation != null && _toTargetObjectRotation.enabled)
                 {
                     _toTargetObjectRotation.enabled = false;
                 }
-                if (_toMoveDirectionRotation != null)
+                if (_toMoveDirectionRotation != null && !_toMoveDirectionRotation.enabled)
                 {
                     _toMoveDirectionRotation.enabled = true;
                 }

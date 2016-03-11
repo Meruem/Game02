@@ -21,8 +21,15 @@ namespace Assets.Scripts.Actors.Movement
             if (!message.AllowOtherMovement)
             {
                 _isInForcedMovement = true;
-                this.StartAfterTime(() => { _isInForcedMovement = false; }, message.ForwardTime);
+                //this.StartAfterTime(() => { _isInForcedMovement = false; }, message.ForwardTime);
+                StartCoroutine(Bla(message.ForwardTime));
             }
+        }
+
+        private IEnumerator Bla(float time)
+        {
+            yield return new WaitForSeconds(time);
+            _isInForcedMovement = false;
         }
 
         public void Update()

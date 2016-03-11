@@ -71,8 +71,8 @@ public class Weapon2Script : MonoBehaviour, IAttack
     {
         if (CanFire) return; // not attacking
         _isCanceled = true;
-        _animator.SetBool("IsSwinging", false);
-        _animator.SetBool("IsBlocked", true);
+
+        _animator.SetBool("IsCancelled", true);
     }
 
     private void ShieldHit()
@@ -88,50 +88,66 @@ public class Weapon2Script : MonoBehaviour, IAttack
         CanFire = false;
         _isBlocked = false;
         _isCanceled = false;
+        _animator.SetBool("IsCancelled", false);
         _animator.SetBool("IsBlocked", false);
         AlreadyHitTargets.Clear();
         var direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment);
 
         // ready phase
-        _animator.SetBool("IsRedying", true);
-        if (ReadyMoves != null)
+        if (!_isCanceled)
         {
-            for (var i = 0; i < ReadyMoves.Count; i++)
+            _animator.SetBool("IsRedying", true);
+            if (ReadyMoves != null)
             {
-                if (_isCanceled) break;
-                var move = ReadyMoves[i];
-                this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
-                yield return new WaitForSeconds(move.Time);
+                for (var i = 0; i < ReadyMoves.Count; i++)
+                {
+                    if (_isCanceled) break;
+                    var move = ReadyMoves[i];
+                    this.GetPubSub()
+                        .PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time,
+                            move.AllowOtherMovement));
+                    yield return new WaitForSeconds(move.Time);
+                }
             }
         }
         _animator.SetBool("IsRedying", false);
 
         // swing phase
-        _animator.SetBool("IsSwinging", true);
-        if (SwingMoves != null)
+        if (!_isCanceled)
         {
-            direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); //recalculate
-            for (var i = 0; i < SwingMoves.Count; i++)
+            _animator.SetBool("IsSwinging", true);
+            if (SwingMoves != null)
             {
-                if (_isBlocked || _isCanceled) break;
-                var move = SwingMoves[i];
-                this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
-                yield return new WaitForSeconds(move.Time);
+                direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); //recalculate
+                for (var i = 0; i < SwingMoves.Count; i++)
+                {
+                    if (_isBlocked || _isCanceled) break;
+                    var move = SwingMoves[i];
+                    this.GetPubSub()
+                        .PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time,
+                            move.AllowOtherMovement));
+                    yield return new WaitForSeconds(move.Time);
+                }
             }
         }
         _animator.SetBool("IsSwinging", false);
 
         //recover phase
-        direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); // recaulculate
-        _animator.SetBool("IsRecovering", true);
-        if (RecoverMoves != null)
+        if (!_isCanceled)
         {
-            for (var i = 0; i < RecoverMoves.Count; i++)
+            direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment); // recaulculate
+            _animator.SetBool("IsRecovering", true);
+            if (RecoverMoves != null)
             {
-                if (_isCanceled) break;
-                var move = RecoverMoves[i];
-                this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time, move.AllowOtherMovement));
-                yield return new WaitForSeconds(move.Time);
+                for (var i = 0; i < RecoverMoves.Count; i++)
+                {
+                    if (_isCanceled) break;
+                    var move = RecoverMoves[i];
+                    this.GetPubSub()
+                        .PublishMessageInContext(new ForceMovementMessage(direction, move.Speed, move.Time,
+                            move.AllowOtherMovement));
+                    yield return new WaitForSeconds(move.Time);
+                }
             }
         }
         _animator.SetBool("IsRecovering", false);
