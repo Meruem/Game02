@@ -72,7 +72,7 @@ public class Weapon2Script : MonoBehaviour, IAttack
         if (CanFire) return; // not attacking
         _isCanceled = true;
 
-        _animator.SetBool("IsCancelled", true);
+        _animator.SetBool("IsCanceled", true);
     }
 
     private void ShieldHit()
@@ -88,7 +88,7 @@ public class Weapon2Script : MonoBehaviour, IAttack
         CanFire = false;
         _isBlocked = false;
         _isCanceled = false;
-        _animator.SetBool("IsCancelled", false);
+        _animator.SetBool("IsCanceled", false);
         _animator.SetBool("IsBlocked", false);
         AlreadyHitTargets.Clear();
         var direction = Math2.AngleDegToVector(transform.rotation.eulerAngles.z + RotationAdjustment);
