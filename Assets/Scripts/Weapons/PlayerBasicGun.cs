@@ -52,7 +52,7 @@ namespace Assets.Scripts.Weapons
             {
                 Debug.LogWarning("No attached 'stats' object not found for this gun!");
             }
-            else if (Stats.HasEnaugh(StatsEnum.Bullets, 1))
+            else if (Stats.HasEnough(StatsEnum.Bullets, 1))
             {
                 if (!_weaponStateMachine.TryFire()) return;
                 BulletObjectFactory.CreateBullet(position, degAngle, BulletPrototype, Layers.GetLayer(LayerName.PlayerBullets), _dynamicGameObjects.transform);

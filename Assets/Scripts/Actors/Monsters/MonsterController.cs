@@ -53,12 +53,14 @@ public class MonsterController : MonoBehaviour
     public void Start()
 	{
         this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
-	    StartCoroutine(WanderAround());
 
         // On Stagger
         this.GetPubSub().SubscribeInContext<StaggerMessage>(m => HandleStaggerMessage((StaggerMessage)m));
 
         Stats.AddRegen(StatsEnum.Stability, 10);
+
+        // Start AI
+        StartCoroutine(AICoroutine());
     }
 
     private void HandleStaggerMessage(StaggerMessage message)
@@ -126,15 +128,17 @@ public class MonsterController : MonoBehaviour
         _gunCooldown = false;
     }
 
-    IEnumerator WanderAround()
+    IEnumerator AICoroutine()
     {
         yield return new WaitForSeconds(1);
         while (true)
         {
             if (VisibilityHelper.CheckVisibility(transform, _playerGameObject.transform, MaxVisibleDistance, _layerMask))
-            {
+            {       
+                // player visible
                 if (_toTargetObjectRotation != null && !_toTargetObjectRotation.enabled)
                 {
+                    // point to player
                     _toTargetObjectRotation.Target = _playerGameObject.transform;
                     _toTargetObjectRotation.enabled = true;
                 }
@@ -143,7 +147,8 @@ public class MonsterController : MonoBehaviour
                     _toMoveDirectionRotation.enabled = false;
                 }
 
-                if (!_isStaggered && Stats.HasEnaugh(StatsEnum.Bullets, 1) && !_gunCooldown)
+                // shoot if able
+                if (!_isStaggered && Stats.HasEnough(StatsEnum.Bullets, 1) && !_gunCooldown)
                 {
                     var q = Quaternion.LookRotation(Vector3.forward,
                         _playerGameObject.transform.position - transform.position);
@@ -155,6 +160,7 @@ public class MonsterController : MonoBehaviour
                 }
                 else
                 {
+                    // go to proper distance
                     var distance = (transform.position - _playerGameObject.transform.position).magnitude;
                     if (distance < TooCloseDistance)
                     {
@@ -163,6 +169,7 @@ public class MonsterController : MonoBehaviour
                     }
                     else if (distance <= AttackDistance)
                     {
+                        // attack when in attack range
                         Attack();
                     }
                     else
@@ -184,6 +191,7 @@ public class MonsterController : MonoBehaviour
                     _toMoveDirectionRotation.enabled = true;
                 }
 
+                // wander randomly
                 float angle = Random.Range(0, 16) * (float)Math.PI * 2f / 16;
                 var vector = Math2.AngleRadToVector(angle);
                 Move(vector);

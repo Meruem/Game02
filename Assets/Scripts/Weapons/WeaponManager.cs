@@ -59,7 +59,7 @@ namespace Assets.Scripts.Weapons
                 return false;
             }
 
-            if (Stats != null && Stats.IsStatDefined(StatsEnum.Energy) && !Stats.HasEnaugh(StatsEnum.Energy, attack.RequiredEnergy))
+            if (Stats != null && Stats.IsStatDefined(StatsEnum.Energy) && !Stats.HasEnough(StatsEnum.Energy, attack.RequiredEnergy))
             {
                 Debug.Log("Not enaugh energy.");
                 return false;

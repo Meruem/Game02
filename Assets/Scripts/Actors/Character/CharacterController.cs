@@ -87,7 +87,7 @@ public class CharacterController : MonoBehaviour
 
     private void HandleShieldHitMessage(ShieldHitMessage shieldHitMessage)
     {
-        if (!Stats.HasEnaugh(StatsEnum.Energy, shieldHitMessage.EnergyDamage))
+        if (!Stats.HasEnough(StatsEnum.Energy, shieldHitMessage.EnergyDamage))
         {
             Stats.AddAmount(StatsEnum.Health, -shieldHitMessage.OriginalDamage);
             _isShielded = false;

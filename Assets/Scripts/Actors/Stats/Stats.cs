@@ -44,7 +44,7 @@ namespace Assets.Scripts.Actors.Stats
             StartCoroutine(RegenTick());
         }
 
-        public bool HasEnaugh(StatsEnum stat, int required)
+        public bool HasEnough(StatsEnum stat, int required)
         {
             if (required == 0) return true;
 
