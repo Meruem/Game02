@@ -31,6 +31,7 @@ public class MonsterController : MonoBehaviour
 
     private bool _gunCooldown;
     private bool _isStaggered;
+    private bool _isAttacking;
 
     public void Awake()
     {
@@ -119,6 +120,7 @@ public class MonsterController : MonoBehaviour
     {
         if (_isStaggered) return;
         _weaponManager.FirePrimary();
+        _isAttacking = true;
     }
 
     IEnumerator WeaponCooldown(float time)

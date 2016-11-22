@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;		// This allows for the use of lists, like <GameObject>
 using System.Linq;
+using UnityEngine.Rendering;
 
 #endregion
 
@@ -460,7 +461,7 @@ public class DynamicLight : MonoBehaviour {
 	/// Suscribe to this event for receive array of game
 	/// </summary>
 	[Obsolete("OnReachedGameObjects is deprecated, please use InsideFieldOfViewEvent instead.")]
-	public event OnReachedDelegate OnReachedGameObjects;
+	//public event OnReachedDelegate OnReachedGameObjects;
 	public event InsideFieldOfViewDelegate InsideFieldOfViewEvent;
 
 	public event OnEnterFieldOfViewDelegate OnEnterFieldOfView;
@@ -767,7 +768,8 @@ public class DynamicLight : MonoBehaviour {
 		}
 		renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		renderer.receiveShadows = false;
-		renderer.useLightProbes = false;
+	    renderer.lightProbeUsage = LightProbeUsage.Off;
+		//renderer.useLightProbes = false;
 		//renderer.sortingLayerName = "Default";
 
 		//--mesh filter--//
@@ -1397,9 +1399,9 @@ public class DynamicLight : MonoBehaviour {
 			// Here's where event's are performed //
 			if(notifyGameObjectsReached == true){
 				//notify if not null
-				if(OnReachedGameObjects != null){
-					OnReachedGameObjects(objReached.ToArray());
-				}
+				//if(OnReachedGameObjects != null){
+				//	OnReachedGameObjects(objReached.ToArray());
+				//}
 				if(InsideFieldOfViewEvent != null){
 					InsideFieldOfViewEvent(objReached.ToArray());
 				}

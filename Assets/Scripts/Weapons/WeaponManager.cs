@@ -8,12 +8,29 @@ namespace Assets.Scripts.Weapons
     {
         public Stats Stats;
 
+        public AttackRepository AttackRepository;
+
+        public List<string> AttackNames;
+
         private IList<IAttack> _weapons = new List<IAttack>();
         private IAttack _primaryAttack;
         private IAttack _secondaryAttack;
 
-        public void Awake()
+        public void Start()
         {
+            if (AttackNames != null && AttackRepository != null)
+            {
+                AttackNames.ForEach(a =>
+                {
+                    var attack = AttackRepository.GetAttack(a);
+                    if (attack != null)
+                    {
+                        var attackTransform = (Transform) Instantiate(attack, Vector3.zero, Quaternion.identity);
+                        attackTransform.SetParent(transform, false);
+                    }
+                });
+            }
+
             _weapons = GetComponentsInChildren<IAttack>();
             if (_weapons != null && _weapons.Count > 0)
             {

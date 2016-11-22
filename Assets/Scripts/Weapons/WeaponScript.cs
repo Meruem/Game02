@@ -16,7 +16,7 @@ public class ForcedMove
 }
 
 [RequireComponent(typeof(Animator))]
-public class Weapon2Script : MonoBehaviour, IAttack
+public class WeaponScript : MonoBehaviour, IAttack
 {
     public int WeaponDamage = 2;
     public int AfterBlockEnergyDamage = 10;

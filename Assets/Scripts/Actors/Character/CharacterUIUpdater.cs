@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Assets.Scripts.Actors.Character
 {
-    public class CharacterUI : MonoBehaviour
+    public class CharacterUIUpdater : MonoBehaviour
     {
         public void Awake()
         {

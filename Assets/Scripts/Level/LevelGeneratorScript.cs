@@ -24,7 +24,7 @@ namespace Assets.Scripts
         public Transform WallTile;
         public Transform GroudTile;
         public Transform Player;
-        public Transform Monster;
+        public List<Transform> Monsters;
 
         private readonly int _maxTries = 200;
         private TileMap _map;
@@ -162,7 +162,8 @@ namespace Assets.Scripts
             for (int i = 0; i < MonsterCount; i++)
             {
                 var position = GetRandomFreePosition();
-                var monster = (Transform)Instantiate(Monster, position, Quaternion.identity);
+                var monsterPrefab = Monsters[Random.Range(0, Monsters.Count)];
+                var monster = (Transform)Instantiate(monsterPrefab, position, Quaternion.identity);
                 monster.parent = _monstersGameObject.transform;
             }
         }
