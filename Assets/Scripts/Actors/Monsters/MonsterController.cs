@@ -58,10 +58,17 @@ public class MonsterController : MonoBehaviour
         // On Stagger
         this.GetPubSub().SubscribeInContext<StaggerMessage>(m => HandleStaggerMessage((StaggerMessage)m));
 
+        this.GetPubSub().SubscribeInContext<AttackEndedMessage>(m => HandleAttackEnded());
+
         Stats.AddRegen(StatsEnum.Stability, 10);
 
         // Start AI
         StartCoroutine(AICoroutine());
+    }
+
+    private void HandleAttackEnded()
+    {
+        _isAttacking = false;
     }
 
     private void HandleStaggerMessage(StaggerMessage message)
@@ -164,18 +171,20 @@ public class MonsterController : MonoBehaviour
                 {
                     // go to proper distance
                     var distance = (transform.position - _playerGameObject.transform.position).magnitude;
-                    if (distance < TooCloseDistance)
+                    if (distance < TooCloseDistance && !_isAttacking)
                     {
+                        // move back when close
                         var vector = -_playerGameObject.transform.position + transform.position;
                         MoveBackWards(vector);
                     }
-                    else if (distance <= AttackDistance)
+                    else if (distance <= AttackDistance && !_isAttacking)
                     {
                         // attack when in attack range
                         Attack();
                     }
                     else
                     {
+                        // move to target
                         var vector = _playerGameObject.transform.position - transform.position;
                         Move(vector);
                     }
