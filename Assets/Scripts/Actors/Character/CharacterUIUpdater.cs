@@ -15,20 +15,19 @@ namespace Assets.Scripts.Actors.Character
 
         private void HandleStatChangedMesssage(StatChangedMessage statChangedMessage)
         {
-            if (statChangedMessage.Stat == StatsEnum.Health)
+            switch (statChangedMessage.Stat)
             {
-                this.GetPubSub().PublishMessageGlobal(new HealthChangedMessage(statChangedMessage.NewValue));
-                return;
-            }
+                case StatsEnum.Health:
+                    this.GetPubSub().PublishMessageGlobal(new HealthChangedMessage(statChangedMessage.NewValue));
+                    return;
 
-            if (statChangedMessage.Stat == StatsEnum.Energy)
-            {
-                this.GetPubSub().PublishMessageGlobal(new EnergyChangedMessage(statChangedMessage.NewValue));
-            }
+                case StatsEnum.Energy:
+                    this.GetPubSub().PublishMessageGlobal(new EnergyChangedMessage(statChangedMessage.NewValue));
+                    return;
 
-            if (statChangedMessage.Stat == StatsEnum.Bullets)
-            {
-                this.GetPubSub().PublishMessageGlobal(new AmmoChangedMessage(statChangedMessage.NewValue));
+                case StatsEnum.Bullets:
+                    this.GetPubSub().PublishMessageGlobal(new AmmoChangedMessage(statChangedMessage.NewValue));
+                    return;
             }
         }
     }

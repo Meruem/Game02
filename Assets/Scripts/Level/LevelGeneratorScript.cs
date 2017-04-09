@@ -49,7 +49,10 @@ namespace Assets.Scripts
             _levelObjective = new KillAllMonstersObjective(_monstersGameObject);
             
             PubSub.GlobalPubSub.Subscribe<RestartLevelMessage>(m => Restart());
+        }
 
+        public void Start()
+        {
             Restart();
         }
 

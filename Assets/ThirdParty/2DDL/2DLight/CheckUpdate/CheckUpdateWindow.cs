@@ -2,22 +2,9 @@
 
 using UnityEngine;
 using UnityEditor;
-using Object = UnityEngine.Object;
-using System.Collections;
 
-
-
-public class DynamicLightAboutWindow : EditorWindow {
-
-	DynamicLightAboutWindow  window;
-	//public Rect _handleArea;
-	private bool _nodeOption, _options, _handleActive, _action;
-	private Texture2D _rawIcon;
-	private GUIContent _icon;
-	private float _winMinX, _winMinY;
-	private int _mainwindowID;
-
-
+public class DynamicLightAboutWindow : EditorWindow
+{
 	// Updates variables
 	static string assetFileName = "CheckUpdateAssetFile.asset";
 	static string updateUrlAsset = "http://martinysa.com/MyFiles/2DDL/Updates/"; //"http://martinysa.com/MyFiles/2DDL/Updates/DynamicLightServerAsset.asset";

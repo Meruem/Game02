@@ -12,26 +12,19 @@ public class CustomDragData{
 [CustomEditor (typeof (DynamicLight))] 
 [CanEditMultipleObjects]
 
-public class DynamicLightEditor : Editor {
-
+public class DynamicLightEditor : Editor
+{
 	static internal DynamicLight light;
 
 	SerializedProperty version, lmaterial, lUseSolidColor, lColor, strokeRender, radius, segments, range;
-	SerializedProperty layerm, useEvents, intelliderConvex, staticScene, recalcNorms, debugLines, sortOrder;
-
-	string _lastVersion;
-	Material  _lastLmaterial;
-	bool _lastlUseSolidColor, _lastUseEvents, _lastIntelliderConvex, _lastStaticScene, _lastDebugLines, _lastRecalcNorms;
-	Color _lastColor;
-	float _lastRadius, _lastRange;
-	int _lastSegments, _lastSortOrder, _lastLayerm;
-
+	SerializedProperty layerm, useEvents, intelliderConvex, staticScene, recalcNorms, debugLines;
 
 	private GUIStyle titleStyle, subTitleStyle, bgStyle, btnStyle;
 
 	private Vector2 lightRectOrigin, lightRectSize;
 
-	internal void OnEnable(){
+	internal void OnEnable()
+    {
 
 		//serialtarget = new SerializedObject(target);
 		light = target as DynamicLight;

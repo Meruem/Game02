@@ -7,7 +7,7 @@ namespace Assets.Scripts.Actors.Monsters
 {
     public class MonsterDeath : MonoBehaviour
     {
-        public void Awake()
+        public void Start()
         {
             this.GetPubSub().SubscribeInContext<StatChangedMessage>(m => HandleStatChangedMessage((StatChangedMessage)m), m => Filter((StatChangedMessage)m));
         }

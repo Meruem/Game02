@@ -1,18 +1,22 @@
 ﻿using System.Collections.Generic;
 using Assets.Scripts;
-using Assets.Scripts.Actors;
 using Assets.Scripts.Actors.Stats;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Messages.Input;
 using Assets.Scripts.Misc;
 using Assets.Scripts.Weapons;
 using UnityEngine;
+using Assets.Scripts.Actors.Character;
+using UnityEngine.Assertions;
 
 [RequireComponent(typeof (IMoveScript))]
 public class CharacterController : MonoBehaviour
 {
     public float CharacterSpeed = 5;
     public float CharacterShieldedSpeed = 3;
+
+    public int EnergyRegen = 10;
+    public int StabilityRegen = 10;
 
     public WeaponManager WeaponManager;
     public Stats Stats;
@@ -21,12 +25,8 @@ public class CharacterController : MonoBehaviour
     private bool _isAttacking;
     private bool _isStaggered;
 
-    private readonly List<int> _blockedWeaponIds = new List<int>();
-    private readonly List<WeaponHitMessage> _unresolvedHitMessages = new List<WeaponHitMessage>();
-    private float _nextReset;
-    private float _timeDeltaWait = 0.01f;
-
     private IMoveScript _moveScript;
+    private CharacterDamage _characterDamage;
 
     public void Start()
     {
@@ -48,18 +48,23 @@ public class CharacterController : MonoBehaviour
         // On Stagger
         this.GetPubSub().SubscribeInContext<StaggerMessage>(m => HandleStaggerMessage((StaggerMessage)m));
 
-        Stats.AddRegen(StatsEnum.Energy, 10);
-        Stats.AddRegen(StatsEnum.Stability, 10);
+        Assert.IsNotNull(Stats);
+
+        Stats.AddRegen(StatsEnum.Energy, EnergyRegen);
+        Stats.AddRegen(StatsEnum.Stability, StabilityRegen);
+
+        _characterDamage = new CharacterDamage(Stats);
     }
 
     public void Update()
     {
-        ApplyDamage();
+        _characterDamage.ApplyDamage();
     }
 
     private void HandleStaggerMessage(StaggerMessage message)
     {
         _isStaggered = true;
+
         // disable movement
         this.GetPubSub().PublishMessageInContext(new ForceMovementMessage(Vector2.zero, 0, message.Time, false));
 
@@ -70,20 +75,6 @@ public class CharacterController : MonoBehaviour
         this.StartAfterTime(() => { _isStaggered = false; }, message.Time);
     }
 
-    private void ApplyDamage()
-    {
-        if (_nextReset > 0 && Time.time > _nextReset)
-        {
-            _blockedWeaponIds.Clear();
-            foreach (var message in _unresolvedHitMessages)
-            {
-                Stats.AddAmount(StatsEnum.Health, -message.Damage);
-                Stats.AddAmount(StatsEnum.Stability, -message.StabilityDamage);
-            }
-            _unresolvedHitMessages.Clear();
-            _nextReset = 0;
-        }
-    }
 
     private void HandleShieldHitMessage(ShieldHitMessage shieldHitMessage)
     {
@@ -98,9 +89,7 @@ public class CharacterController : MonoBehaviour
             Stats.AddAmount(StatsEnum.Energy, -shieldHitMessage.EnergyDamage);
         }
 
-        _blockedWeaponIds.Add(shieldHitMessage.Weapon.GetInstanceID());
-        _unresolvedHitMessages.RemoveAll(m => m.Weapon.GetInstanceID() == shieldHitMessage.Weapon.GetInstanceID());
-        _nextReset = Time.time + _timeDeltaWait;
+        _characterDamage.RegisterNewBlockedDamageSource(shieldHitMessage.Weapon.GetInstanceID());
     }
 
     private void HandleAttackEnded()
@@ -154,8 +143,6 @@ public class CharacterController : MonoBehaviour
 
     private void HandleWeaponHit(WeaponHitMessage weaponHitMessage)
     {
-        if (_blockedWeaponIds.Contains(weaponHitMessage.Weapon.GetInstanceID())) return;
-        _unresolvedHitMessages.Add(weaponHitMessage);
-        _nextReset = Time.time + _timeDeltaWait;
+        _characterDamage.RegisterNewDamage(weaponHitMessage);
     }
 }

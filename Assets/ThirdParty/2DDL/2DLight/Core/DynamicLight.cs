@@ -586,11 +586,6 @@ public class DynamicLight : MonoBehaviour {
 	private CasterCollider[] _allMeshes;
 	
 	/// <summary>
-	/// The max n verts a single collider can have
-	/// </summary>
-	private int _maxVertsPerObj;
-	
-	/// <summary>
 	/// the total ammount of verts for all colliders
 	/// </summary>
 	private int _maxTotalVerts;
@@ -673,14 +668,6 @@ public class DynamicLight : MonoBehaviour {
 	/// delta angle range comparison between 2 points with same angle
 	/// </summary>
 	//private const float _magRange = 0.15f;
-	
-	
-	/// <summary>
-	/// Enumerator as Main update loop
-	/// </summary>
-	internal IEnumerator e;
-	
-	
 	
 	void OnDrawGizmos() {
 		Gizmos.DrawIcon(transform.position, "bright.png", false);

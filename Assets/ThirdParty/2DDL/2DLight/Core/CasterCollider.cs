@@ -16,10 +16,7 @@ public class CasterCollider{
 
 	public CasterType type;
 
-	internal float lastRadius;
 	internal float lastZRot;
-
-
 
 	internal CasterCollider(PolygonCollider2D coll){
 		collider = coll;
