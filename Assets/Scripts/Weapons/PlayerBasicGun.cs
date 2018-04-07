@@ -7,11 +7,10 @@ namespace Assets.Scripts.Weapons
 {
     public class PlayerBasicGun : MonoBehaviour, IAttack
     {
-        public Stats Stats; 
         public float WeaponCooldown;    // forwardTime until next shot is ready
         public BulletPrototype BulletPrototype;
         public int EnergyRequired = 10;
-
+        public int BulletsRequired = 1;
         private WeaponStateMachine _weaponStateMachine;
         private GameObject _dynamicGameObjects;
         private int _id;
@@ -23,9 +22,9 @@ namespace Assets.Scripts.Weapons
             _dynamicGameObjects = GameObjectEx.Find(GameObjectNames.DynamicObjects);
         }
 
-        public void Fire()
+        public void Fire(Stats stats)
         {
-            Fire(transform.position, transform.rotation.eulerAngles.z);
+            Fire(transform.position, transform.rotation.eulerAngles.z, stats);
             this.GetPubSub().PublishMessageInContext(new AttackEndedMessage());
         }
 
@@ -44,19 +43,22 @@ namespace Assets.Scripts.Weapons
             // do nothing
         }
 
-        public bool CanFire { get { return _weaponStateMachine.GetState() == WeaponState.Inactive; } }
-
-        private void Fire(Vector2 position, float degAngle)
+        public bool CanFire(Stats stats)
         {
-            if (Stats == null)
+            return _weaponStateMachine.GetState() == WeaponState.Inactive && stats.HasEnough(StatsEnum.Bullets, BulletsRequired); 
+        }
+
+        private void Fire(Vector2 position, float degAngle, Stats stats)
+        {
+            if (stats == null)
             {
                 Debug.LogWarning("No attached 'stats' object not found for this gun!");
             }
-            else if (Stats.HasEnough(StatsEnum.Bullets, 1))
+            else if (stats.HasEnough(StatsEnum.Bullets, BulletsRequired))
             {
                 if (!_weaponStateMachine.TryFire()) return;
-                BulletObjectFactory.CreateBullet(position, degAngle, BulletPrototype, Layers.GetLayer(LayerName.PlayerBullets), _dynamicGameObjects.transform);
-                Stats.AddAmount(StatsEnum.Bullets, -1);
+                Bullet.CreateBullet(position, degAngle, BulletPrototype, Layers.GetLayer(LayerName.PlayerBullets), _dynamicGameObjects.transform);
+                stats.AddAmount(StatsEnum.Bullets, -BulletsRequired);
             }
         }
     }

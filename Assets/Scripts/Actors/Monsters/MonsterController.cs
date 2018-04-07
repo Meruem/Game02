@@ -10,7 +10,7 @@ using Assets.Scripts.Weapons;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-[RequireComponent(typeof(IMoveScript))]
+[RequireComponent(typeof(MoveScript))]
 public class MonsterController : MonoBehaviour
 {
     public Stats Stats;
@@ -23,7 +23,7 @@ public class MonsterController : MonoBehaviour
     private GameObject _playerGameObject;
     private int _layerMask;
 
-    private IMoveScript _moveScript;
+    private MoveScript _moveScript;
     private ToMoveDirectionRotation _toMoveDirectionRotation;
     private ToTargetObjectRotation _toTargetObjectRotation;
 
@@ -42,7 +42,7 @@ public class MonsterController : MonoBehaviour
 
         var shadowLayer = Layers.GetLayer(LayerName.ShadowLayer);
         _layerMask = (1 << shadowLayer) | (1 << Layers.GetLayer(LayerName.Player));
-        _moveScript = GetComponent<IMoveScript>();
+        _moveScript = GetComponent<MoveScript>();
         _weaponManager = GetComponentInChildren<WeaponManager>();
 
         if (_weaponManager == null)
@@ -56,7 +56,7 @@ public class MonsterController : MonoBehaviour
         this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage)m));
 
         // On Stagger
-        this.GetPubSub().SubscribeInContext<StaggerMessage>(m => HandleStaggerMessage((StaggerMessage)m));
+        this.GetPubSub().SubscribeInContext<StaggeredMessage>(m => HandleStaggerMessage((StaggeredMessage)m));
 
         this.GetPubSub().SubscribeInContext<AttackEndedMessage>(m => HandleAttackEnded());
 
@@ -71,7 +71,7 @@ public class MonsterController : MonoBehaviour
         _isAttacking = false;
     }
 
-    private void HandleStaggerMessage(StaggerMessage message)
+    private void HandleStaggerMessage(StaggeredMessage message)
     {
         _isStaggered = true;
         // disable movement
@@ -97,7 +97,7 @@ public class MonsterController : MonoBehaviour
         }
         else
         {
-            BulletObjectFactory.CreateBullet(transform.position, angle, BulletPrototype, Layers.GetLayer(LayerName.MonsterBullets), _dynamicGameObjects.transform);
+            Bullet.CreateBullet(transform.position, angle, BulletPrototype, Layers.GetLayer(LayerName.MonsterBullets), _dynamicGameObjects.transform);
         }
     }
 

@@ -1,11 +1,13 @@
-﻿namespace Assets.Scripts.Weapons
+﻿using Assets.Scripts.Actors.Stats;
+
+namespace Assets.Scripts.Weapons
 {
     public interface IAttack
     {
-        void Fire();
+        void Fire(Stats stats);
         int Id { get; }
         int RequiredEnergy { get; }
-        bool CanFire { get; }
+        bool CanFire(Stats stats);
         void CancelAttack();
     }
 }

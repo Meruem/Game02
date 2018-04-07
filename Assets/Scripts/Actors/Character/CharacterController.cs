@@ -9,7 +9,7 @@ using UnityEngine;
 using Assets.Scripts.Actors.Character;
 using UnityEngine.Assertions;
 
-[RequireComponent(typeof (IMoveScript))]
+[RequireComponent(typeof (MoveScript))]
 public class CharacterController : MonoBehaviour
 {
     public float CharacterSpeed = 5;
@@ -25,12 +25,14 @@ public class CharacterController : MonoBehaviour
     private bool _isAttacking;
     private bool _isStaggered;
 
-    private IMoveScript _moveScript;
+    private MoveScript _moveScript;
     private CharacterDamage _characterDamage;
+    private Shield _shieldScript;
 
     public void Start()
     {
-        _moveScript = GetComponent<IMoveScript>();
+        _moveScript = GetComponent<MoveScript>();
+        _shieldScript = GetComponentInChildren<Shield>();
 
         // Take damage when hit by weapon
         this.GetPubSub().SubscribeInContext<WeaponHitMessage>(m => HandleWeaponHit((WeaponHitMessage) m));
@@ -46,7 +48,7 @@ public class CharacterController : MonoBehaviour
         this.GetPubSub().SubscribeInContext<ShieldHitMessage>(m => HandleShieldHitMessage((ShieldHitMessage) m));
 
         // On Stagger
-        this.GetPubSub().SubscribeInContext<StaggerMessage>(m => HandleStaggerMessage((StaggerMessage)m));
+        this.GetPubSub().SubscribeInContext<StaggeredMessage>(m => HandleStaggerMessage((StaggeredMessage)m));
 
         Assert.IsNotNull(Stats);
 
@@ -61,7 +63,7 @@ public class CharacterController : MonoBehaviour
         _characterDamage.ApplyDamage();
     }
 
-    private void HandleStaggerMessage(StaggerMessage message)
+    private void HandleStaggerMessage(StaggeredMessage message)
     {
         _isStaggered = true;
 
@@ -71,7 +73,7 @@ public class CharacterController : MonoBehaviour
         WeaponManager.CancelAttack();
 
         _isShielded = false;
-        this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(_isShielded));
+        _shieldScript.ShieldDown();
         this.StartAfterTime(() => { _isStaggered = false; }, message.Time);
     }
 
@@ -82,7 +84,7 @@ public class CharacterController : MonoBehaviour
         {
             Stats.AddAmount(StatsEnum.Health, -shieldHitMessage.OriginalDamage);
             _isShielded = false;
-            this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(_isShielded));
+            _shieldScript.ShieldDown();
         }
         else
         {
@@ -95,7 +97,8 @@ public class CharacterController : MonoBehaviour
     private void HandleAttackEnded()
     {
         _isAttacking = false;
-        this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(_isShielded));
+        if (_isShielded) _shieldScript.ShieldUp();
+        else _shieldScript.ShieldDown(); 
     }
 
     private void HandleShieldInput(ShieldInputMessage shieldInputMessage)
@@ -105,7 +108,8 @@ public class CharacterController : MonoBehaviour
             _isShielded = shieldInputMessage.ShieldUp;
             if (!_isAttacking)
             {
-                this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(_isShielded));
+                if (_isShielded) _shieldScript.ShieldUp();
+                else _shieldScript.ShieldDown(); 
             }
         }
     }
@@ -117,7 +121,7 @@ public class CharacterController : MonoBehaviour
         _isAttacking = true;
         if (_isShielded)
         {
-            this.GetPubSub().PublishMessageInContext(new ShieldChangeMessage(false));
+            _shieldScript.ShieldDown();
         }
 
         if (fireInputMessage.IsSecondary)

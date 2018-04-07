@@ -18,9 +18,6 @@ namespace Assets.Scripts
         [Range(0, 0.9f)]
         public float MinRoomRation = 0.6f;
 
-        //public int VisibilityRadius = 9;
-        //public int MaxRadius = 12;
-
         public Transform WallTile;
         public Transform GroudTile;
         public Transform Player;

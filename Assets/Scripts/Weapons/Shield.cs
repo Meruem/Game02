@@ -19,8 +19,17 @@ namespace Assets.Scripts.Weapons
 
         public void Start()
         {
-            this.GetPubSub().SubscribeInContext<ShieldChangeMessage>(m => HandleShieldChange((ShieldChangeMessage)m));
             this.GetPubSub().Subscribe<WeaponHitMessage>(m => HandleTakeDamage((WeaponHitMessage)m));
+        }
+
+        public void ShieldUp()
+        {
+            HandleShieldChange(true);
+        }
+
+        public void ShieldDown()
+        {
+            HandleShieldChange(false);
         }
 
         private void HandleTakeDamage(WeaponHitMessage message)
@@ -34,10 +43,10 @@ namespace Assets.Scripts.Weapons
             }); // notify parent object
         }
 
-        private void HandleShieldChange(ShieldChangeMessage shieldChangeMessage)
+        private void HandleShieldChange(bool shieldUp)
         {
-            _colliders.ForEach(c => c.enabled = shieldChangeMessage.ShieldUp);
-            _renderers.ForEach(r => r.enabled = shieldChangeMessage.ShieldUp);
+            _colliders.ForEach(c => c.enabled = shieldUp);
+            _renderers.ForEach(r => r.enabled = shieldUp);
         }
     }
 }

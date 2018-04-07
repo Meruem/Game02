@@ -1,8 +1,8 @@
 ﻿namespace Assets.Scripts.Messages
 {
-    public class StaggerMessage : IMessage
+    public class StaggeredMessage : IMessage
     {
-        public StaggerMessage(float time)
+        public StaggeredMessage(float time)
         {
             Time = time;
         }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts;
+using Assets.Scripts.Actors.Stats;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using Assets.Scripts.Weapons;
@@ -31,7 +32,8 @@ public class WeaponScript : MonoBehaviour, IAttack
 
     public List<int> AlreadyHitTargets { get; private set; }
 
-    public bool CanFire { get; private set; }
+    private bool _canFire;
+    public bool CanFire(Stats stats) { return _canFire;}
 
     private bool _isBlocked;
     private Animator _animator;
@@ -40,7 +42,7 @@ public class WeaponScript : MonoBehaviour, IAttack
 
     public void Start()
     {
-        CanFire = true;
+        _canFire = true;
         _id = gameObject.GetInstanceID();
         _animator = GetComponent<Animator>();
         AlreadyHitTargets = new List<int>();
@@ -58,10 +60,10 @@ public class WeaponScript : MonoBehaviour, IAttack
         get { return EnergyRequired; }
     }
 
-    public void Fire()
+    public void Fire(Stats stats)
     {
         // Hit started
-        if (CanFire)
+        if (_canFire)
         {
             StartCoroutine(Swing());
         }
@@ -69,7 +71,7 @@ public class WeaponScript : MonoBehaviour, IAttack
 
     public void CancelAttack()
     {
-        if (CanFire) return; // not attacking
+        if (_canFire) return; // not attacking
         _isCanceled = true;
 
         _animator.SetBool("IsCanceled", true);
@@ -85,7 +87,7 @@ public class WeaponScript : MonoBehaviour, IAttack
 
     private IEnumerator Swing()
     {
-        CanFire = false;
+        _canFire = false;
         _isBlocked = false;
         _isCanceled = false;
         _animator.SetBool("IsCanceled", false);
@@ -151,7 +153,7 @@ public class WeaponScript : MonoBehaviour, IAttack
             }
         }
         _animator.SetBool("IsRecovering", false);
-        CanFire = true;
+        _canFire = true;
 
         this.GetPubSub().PublishMessageInContext(new AttackEndedMessage());
     }

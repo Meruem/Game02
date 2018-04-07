@@ -24,7 +24,7 @@ namespace Assets.Scripts.Actors.Stats
         private void HandleStagger()
         {
             IsStaggering = true;
-            this.GetPubSub().PublishMessageInContext(new StaggerMessage(StaggerTime));
+            this.GetPubSub().PublishMessageInContext(new StaggeredMessage(StaggerTime));
             StartCoroutine(StaggerCourutine());
         }
 

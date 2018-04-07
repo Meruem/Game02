@@ -7,10 +7,7 @@ namespace Assets.Scripts.Weapons
     public class WeaponManager : MonoBehaviour
     {
         public Stats Stats;
-
-        public AttackRepository AttackRepository;
-
-        public List<string> AttackNames;
+        public List<Transform> Attacks;
 
         private IList<IAttack> _weapons = new List<IAttack>();
         private IAttack _primaryAttack;
@@ -18,16 +15,12 @@ namespace Assets.Scripts.Weapons
 
         public void Start()
         {
-            if (AttackNames != null && AttackRepository != null)
+            if (Attacks != null && Attacks.Count > 0)
             {
-                AttackNames.ForEach(a =>
+                Attacks.ForEach(attack =>
                 {
-                    var attack = AttackRepository.GetAttack(a);
-                    if (attack != null)
-                    {
-                        var attackTransform = (Transform) Instantiate(attack, Vector3.zero, Quaternion.identity);
-                        attackTransform.SetParent(transform, false);
-                    }
+                    var attackTransform = (Transform) Instantiate(attack, Vector3.zero, Quaternion.identity);
+                    attackTransform.SetParent(transform, false);
                 });
             }
 
@@ -82,9 +75,9 @@ namespace Assets.Scripts.Weapons
                 return false;
             }
 
-            if (!attack.CanFire) return false;
+            if (!attack.CanFire(Stats)) return false;
 
-            attack.Fire();
+            attack.Fire(Stats);
             if (Stats != null && Stats.IsStatDefined(StatsEnum.Energy))
             {
                 Stats.AddAmount(StatsEnum.Energy, -attack.RequiredEnergy);

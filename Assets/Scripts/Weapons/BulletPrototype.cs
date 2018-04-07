@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace Assets.Scripts.Weapons
 {
-    [Serializable]
-    public class BulletPrototype
+    [CreateAssetMenu(menuName="Attacks/Bullets")]
+    public class BulletPrototype : ScriptableObject
     {
         public int Speed;
         public int Damage;

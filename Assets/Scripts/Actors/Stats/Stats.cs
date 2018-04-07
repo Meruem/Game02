@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.Messages;
 using Assets.Scripts.Misc;
 using UnityEngine;
@@ -35,12 +36,12 @@ namespace Assets.Scripts.Actors.Stats
     {
         public List<StatInfo> StatInfos;
 
-        private readonly IDictionary<StatsEnum, StatInfo> _currentValues = new Dictionary<StatsEnum, StatInfo>();
+        private IDictionary<StatsEnum, StatInfo> _currentValues = new Dictionary<StatsEnum, StatInfo>();
         private readonly IList<RegenInfo> _regens = new List<RegenInfo>();  
 
         public void Start()
         {
-            StatInfos.ForEach(si => _currentValues[si.Stat] = si);
+            _currentValues = StatInfos.ToDictionary(si => si.Stat);
             StartCoroutine(RegenTick());
         }
 

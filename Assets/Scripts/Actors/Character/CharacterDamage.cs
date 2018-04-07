@@ -42,7 +42,6 @@ namespace Assets.Scripts.Actors.Character
 
         public void RegisterNewDamage(WeaponHitMessage weaponHitMessage)
         {
-
             if (_blockedWeaponIds.Contains(weaponHitMessage.Weapon.GetInstanceID())) return;
             _unresolvedHitMessages.Add(weaponHitMessage);
             _nextReset = Time.time + _timeDeltaWait;

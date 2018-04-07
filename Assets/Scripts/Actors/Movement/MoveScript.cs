@@ -8,7 +8,7 @@ namespace Assets.Scripts
     /// Listens for MoveInDirection and ForceMovement messages and moves attached rigid body accordingly.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
-    public class MoveScript : MonoBehaviour, IMoveScript
+    public class MoveScript : MonoBehaviour
     {
         public float MaxSpeed = 5.0f;
         
